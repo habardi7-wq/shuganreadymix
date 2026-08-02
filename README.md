@@ -79,7 +79,7 @@ company until they accept a quote themselves.
 | القرار | السبب |
 |---|---|
 | **Next.js 16 + TypeScript + Tailwind v4** | إطار واحد يغطي الواجهة وواجهة API معًا، ويعطي أساسًا نظيفًا لتطبيق جوال لاحق عبر نفس الـ API |
-| **SQLite (Prisma) للتطوير** | صفر إعداد، ملف واحد، تشغيل فوري. المخطط مصمم بدون ميزات خاصة بـ SQLite (لا enums، لا arrays) بحيث التحويل لاحقًا إلى PostgreSQL هو تغيير سطرين فقط في `schema.prisma` و `DATABASE_URL` |
+| **Postgres (Neon) بدل SQLite** | بدأ المشروع بـ SQLite (صفر إعداد) والمخطط صُمم أصلًا بدون ميزات خاصة به تحديدًا لسهولة الانتقال لاحقًا. عند طلب النشر على Netlify، تبيّن أن SQLite (ملف محلي) لا يعمل على استضافة serverless (نظام ملفات مؤقت)، فتم التحويل الفعلي إلى Postgres عبر Neon و`@prisma/adapter-neon` (اتصال HTTP/WebSocket مناسب لبيئات serverless بدل TCP طويل العمر) |
 | **الحالات كنصوص (strings) بدل enum** | قيد فرضته SQLite، مع مصدر حقيقة واحد بالأنواع في `lib/enums.ts` يستخدمه الكود والتحقق (zod) |
 | **JWT في كوكيز httpOnly بدل جلسات DB** | كافٍ لهذا النطاق، بلا اعتمادية إضافية. يمكن إضافة جدول Session لاحقًا لدعم إبطال الجلسات عن بُعد |
 | **next-intl لتعدد اللغات** | يدعم Next.js 16 رسميًا، ويعطي مسارات `/ar` و `/en` منفصلة مع RTL/LTR تلقائي |
@@ -97,6 +97,7 @@ company until they accept a quote themselves.
 
 - Node.js 20+ (تم الاختبار على Node 22)
 - npm
+- قاعدة بيانات Postgres (نستخدم [Neon](https://neon.tech) — طبقة مجانية كافية للتطوير/العرض)
 
 ### خطوات التثبيت | Setup
 
@@ -104,16 +105,24 @@ company until they accept a quote themselves.
 npm install
 
 cp .env.example .env
-# افتح .env وولّد قيمة عشوائية حقيقية لـ AUTH_SECRET قبل أي بيئة غير محلية:
+# ضع رابط اتصال Postgres الحقيقي (من Neon مثلًا) في DATABASE_URL
+# وولّد قيمة عشوائية حقيقية لـ AUTH_SECRET قبل أي بيئة غير محلية:
 # openssl rand -base64 48
 
-npm run db:migrate   # ينشئ قاعدة بيانات SQLite محلية (dev.db) بحسب المخطط
+npm run db:migrate   # ينشئ الجداول على قاعدة البيانات بحسب المخطط
 npm run db:seed      # يزرع بيانات شغن التجريبية + المدن + حساب الإدارة
 
 npm run dev
 ```
 
 افتح http://localhost:3000 — سيُعاد توجيهك تلقائيًا إلى `/ar`.
+
+> منذ الإصدار الثاني، قاعدة البيانات **Postgres في كل بيئة** (محليًا وفي
+> الإنتاج) — لم تعد SQLite مستخدمة، لأن استضافات serverless مثل Netlify
+> Functions لا تحافظ على ملف SQLite بين الطلبات (نظام ملفات مؤقت/للقراءة
+> فقط)، فتفشل عمليات الكتابة (تسجيل، OTP، إنشاء طلب) في الإنتاج. الاتصال
+> بقاعدة Postgres يتم عبر `@prisma/adapter-neon` (بروتوكول HTTP/WebSocket
+> مناسب للبيئات اللاخادمية، بلا اتصالات TCP طويلة العمر).
 
 ### حسابات تجريبية | Demo accounts
 
@@ -139,6 +148,33 @@ npx tsc --noEmit     # فحص الأنواع
 npm run build        # بناء الإنتاج
 npm run db:studio    # واجهة Prisma Studio لتصفح البيانات
 ```
+
+---
+
+## 3.1 النشر على Netlify | Deploying to Netlify
+
+المشروع مهيّأ للنشر على Netlify عبر `netlify.toml` وحزمة `@netlify/plugin-nextjs`
+(مضافة كـ devDependency، تُفعَّل تلقائيًا من الملف). أسهل طريقة:
+
+1. اربط المستودع (هذا الفرع) بموقع Netlify جديد من لوحة Netlify مباشرة
+   ("Import from Git") — هذا لا يحتاج مشاركة أي بيانات دخول معي.
+2. من إعدادات الموقع في Netlify → **Environment variables**، أضف:
+   - `DATABASE_URL` = رابط اتصال Postgres (Neon) — **استخدم رابط "Pooled
+     connection" إن توفر**، لأن دوال Netlify قصيرة العمر ولا تستفيد من اتصال
+     مباشر طويل.
+   - `AUTH_SECRET` = قيمة عشوائية طويلة (`openssl rand -base64 48`) —
+     **مختلفة عن أي قيمة تطوير محلية**.
+3. أول عملية `npm install` على Netlify تُشغّل `prisma generate` تلقائيًا
+   (عبر `postinstall`)، ثم `npm run build` يبني المشروع.
+4. **مهم:** الجداول لا تُنشأ تلقائيًا عند النشر. شغّل الترحيل مرة واحدة قبل
+   أول نشر (من جهازك، بربط `DATABASE_URL` بنفس رابط Neon):
+   ```bash
+   npm run db:deploy   # prisma migrate deploy — ينشئ الجداول على قاعدة الإنتاج
+   npm run db:seed     # اختياري: بيانات شغن التجريبية على قاعدة الإنتاج
+   ```
+
+لم يتم تنفيذ خطوة النشر الفعلية من هذه الجلسة لأنني لا أملك بيانات دخول
+Netlify — الخطوات أعلاه تُمكّن أي شخص من ربط المستودع ونشره خلال دقائق.
 
 ---
 

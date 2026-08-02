@@ -1,8 +1,8 @@
 // Kharasana Pro (خرسانة برو) - Database schema
-// NOTE: SQLite is used for local development/demo (file-based, zero setup).
-// The schema intentionally avoids SQLite-only features (native enums, arrays)
-// so switching `provider` to "postgresql" for production is a low-risk change.
-// Status/role/type fields are plain strings validated in code (see lib/enums.ts).
+// Postgres (Neon) in every environment. Status/role/type fields are kept as
+// plain strings validated in code (see lib/enums.ts) rather than native
+// Postgres enums, since the schema originally targeted SQLite (which has no
+// enum support) — this keeps the two backends interchangeable if needed.
 
 generator client {
   provider = "prisma-client"
@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ---------------------------------------------------------------------------
