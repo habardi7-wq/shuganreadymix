@@ -1,0 +1,278 @@
+// Kharasana Pro (خرسانة برو) - Database schema
+// NOTE: SQLite is used for local development/demo (file-based, zero setup).
+// The schema intentionally avoids SQLite-only features (native enums, arrays)
+// so switching `provider` to "postgresql" for production is a low-risk change.
+// Status/role/type fields are plain strings validated in code (see lib/enums.ts).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Identity & access
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  phone        String?  @unique
+  email        String?  @unique
+  passwordHash String? // only used for ADMIN accounts (internal login)
+  role         String // CUSTOMER | COMPANY | SALES_REP | ADMIN
+  name         String?
+  status       String   @default("ACTIVE") // ACTIVE | PENDING_APPROVAL | SUSPENDED | REJECTED
+  adminLevel   String? // SUPER_ADMIN | STAFF (role = ADMIN only)
+  locale       String   @default("ar")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company       Company?
+  salesRep      SalesRep?
+  orders        Order[]
+  notifications Notification[]
+  auditLogs     AuditLog[] @relation("AuditActor")
+  ratings       Rating[]
+
+  @@index([role, status])
+}
+
+model OtpCode {
+  id         String    @id @default(cuid())
+  phone      String
+  code       String
+  purpose    String // REGISTER | LOGIN
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, purpose])
+}
+
+// ---------------------------------------------------------------------------
+// Geography (extensible catalogue of cities/districts)
+// ---------------------------------------------------------------------------
+
+model City {
+  id       String  @id @default(cuid())
+  name     String
+  nameEn   String
+  region   String
+  isActive Boolean @default(true)
+
+  districts    District[]
+  companyAreas CompanyServiceArea[]
+  orders       Order[]
+}
+
+model District {
+  id     String @id @default(cuid())
+  cityId String
+  city   City   @relation(fields: [cityId], references: [id])
+  name   String
+  nameEn String
+
+  companyAreas CompanyServiceArea[]
+  orders       Order[]
+
+  @@index([cityId])
+}
+
+// ---------------------------------------------------------------------------
+// Companies (ready-mix concrete suppliers) & sales reps
+// ---------------------------------------------------------------------------
+
+model Company {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  name          String
+  nameEn        String?
+  slug          String   @unique
+  brandColorHex String   @default("#0B5FFF")
+  logoUrl       String?
+  description   String?
+  descriptionEn String?
+  crNumber      String? // commercial register number (demo data only)
+  crDocUrl      String? // placeholder URL until real document storage is wired
+  status        String   @default("PENDING_REVIEW") // PENDING_REVIEW | APPROVED | REJECTED | SUSPENDED
+  isFeatured    Boolean  @default(false)
+  ratingAvg     Float    @default(0)
+  ratingCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  serviceAreas       CompanyServiceArea[]
+  quotes             Quote[]
+  ratings            Rating[]
+  commissionSettings CommissionSetting[]
+}
+
+model CompanyServiceArea {
+  id         String    @id @default(cuid())
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id])
+  cityId     String
+  city       City      @relation(fields: [cityId], references: [id])
+  districtId String?
+  district   District? @relation(fields: [districtId], references: [id])
+
+  @@unique([companyId, cityId, districtId])
+}
+
+model SalesRep {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  referralCode    String   @unique
+  status          String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  commissionType  String   @default("INHERIT") // INHERIT | PER_M3 | PERCENTAGE | FIXED
+  commissionValue Float?
+  createdAt       DateTime @default(now())
+
+  referredOrders Order[]
+  commissions    Commission[]
+}
+
+// ---------------------------------------------------------------------------
+// Orders & quotes
+// ---------------------------------------------------------------------------
+
+model Order {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  customerId      String
+  customer        User      @relation(fields: [customerId], references: [id])
+  cityId          String
+  city            City      @relation(fields: [cityId], references: [id])
+  districtId      String?
+  district        District? @relation(fields: [districtId], references: [id])
+  locationDetails String?
+  projectType     String // RESIDENTIAL | COMMERCIAL | INDUSTRIAL | INFRASTRUCTURE | OTHER
+  concreteType    String // READY_MIX_NORMAL | READY_MIX_PUMPABLE | SELF_COMPACTING | OTHER
+  strengthGrade   String // C20 | C25 | C30 | C35 | C40 | OTHER
+  quantityM3      Float
+  pumpRequired    Boolean   @default(false)
+  pumpType        String? // BOOM | LINE
+  scheduledAt     DateTime
+  notes           String?
+  status          String    @default("NEW") // NEW | QUOTED | ACCEPTED | COMPLETED | CANCELLED
+  referredByRepId String?
+  referredByRep   SalesRep? @relation(fields: [referredByRepId], references: [id])
+  acceptedQuoteId String?   @unique
+  acceptedQuote   Quote?    @relation("AcceptedQuote", fields: [acceptedQuoteId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  quotes      Quote[]      @relation("OrderQuotes")
+  ratings     Rating[]
+  commissions Commission[]
+
+  @@index([status])
+  @@index([cityId, districtId])
+}
+
+model Quote {
+  id         String    @id @default(cuid())
+  orderId    String
+  order      Order     @relation("OrderQuotes", fields: [orderId], references: [id])
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id])
+  pricePerM3 Float
+  pumpPrice  Float?
+  totalPrice Float
+  notes      String?
+  validUntil DateTime?
+  status     String    @default("PENDING") // PENDING | ACCEPTED | REJECTED | WITHDRAWN
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  acceptedForOrder Order?      @relation("AcceptedQuote")
+  commission       Commission?
+
+  @@index([orderId])
+  @@index([companyId])
+}
+
+// ---------------------------------------------------------------------------
+// Commissions (admin-configurable)
+// ---------------------------------------------------------------------------
+
+model Commission {
+  id          String    @id @default(cuid())
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id])
+  quoteId     String    @unique
+  quote       Quote     @relation(fields: [quoteId], references: [id])
+  repId       String?
+  rep         SalesRep? @relation(fields: [repId], references: [id])
+  type        String // PER_M3 | PERCENTAGE | FIXED
+  rate        Float
+  amount      Float
+  status      String    @default("PENDING") // PENDING | CONFIRMED | PAID
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model CommissionSetting {
+  id        String   @id @default(cuid())
+  scope     String   @default("GLOBAL") // GLOBAL | COMPANY
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+  type      String // PER_M3 | PERCENTAGE | FIXED
+  value     Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Notifications, ratings, audit log
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  body      String
+  channel   String   @default("IN_APP") // IN_APP | EMAIL | WHATSAPP (adapters stubbed for later)
+  isRead    Boolean  @default(false)
+  meta      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model Rating {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  order      Order    @relation(fields: [orderId], references: [id])
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id])
+  stars      Int
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actor       User?    @relation("AuditActor", fields: [actorUserId], references: [id])
+  action      String
+  entityType  String
+  entityId    String?
+  beforeJson  String?
+  afterJson   String?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
