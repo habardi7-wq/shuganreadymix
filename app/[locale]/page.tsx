@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
@@ -91,13 +92,14 @@ export default async function HomePage() {
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-shugan-500/20 bg-white shadow-sm">
           <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-8">
-            <div
-              className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-2xl font-black text-white"
-              style={{ backgroundColor: "var(--color-shugan-500)" }}
-              role="img"
-              aria-label={t("shuganLogoAlt")}
-            >
-              شغن
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white p-1.5 ring-1 ring-ink-100">
+              <Image
+                src="/shugan/logo.png"
+                alt={t("shuganLogoAlt")}
+                width={480}
+                height={746}
+                className="h-full w-full object-contain"
+              />
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -112,7 +114,32 @@ export default async function HomePage() {
               <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-600">
                 {t("shuganDesc")}
               </p>
-              <p className="mt-2 text-xs italic text-ink-400">{t("assetPlaceholderNote")}</p>
+            </div>
+          </div>
+
+          <div className="border-t border-ink-100 bg-ink-50/60 p-5 sm:p-8">
+            <h4 className="font-bold text-ink-900">{t("shuganFleetTitle")}</h4>
+            <p className="mt-1 text-sm text-ink-500">{t("shuganFleetSubtitle")}</p>
+            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {[
+                { src: "/shugan/pump-1.jpg", alt: t("shuganFleetPump1") },
+                { src: "/shugan/pump-2.jpg", alt: t("shuganFleetPump2") },
+                { src: "/shugan/mixer-1.jpg", alt: t("shuganFleetMixer1") },
+                { src: "/shugan/mixer-2.jpg", alt: t("shuganFleetMixer2") },
+              ].map((photo) => (
+                <div
+                  key={photo.src}
+                  className="aspect-[4/3] overflow-hidden rounded-xl bg-ink-100"
+                >
+                  <Image
+                    src={photo.src}
+                    alt={photo.alt}
+                    width={606}
+                    height={408}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
