@@ -48,7 +48,7 @@ export function OrderForm() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ code: string } | null>(null);
+  const [success, setSuccess] = useState<{ code: string; id: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/cities")
@@ -87,7 +87,7 @@ export function OrderForm() {
         setError(data.error ?? t("errorGeneric"));
         return;
       }
-      setSuccess({ code: data.order.code });
+      setSuccess({ code: data.order.code, id: data.order.id });
     } catch {
       setError(t("errorGeneric"));
     } finally {
@@ -107,7 +107,7 @@ export function OrderForm() {
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <button
             onClick={() => {
-              router.push("/customer");
+              router.push(`/customer/orders/${success.id}`);
               router.refresh();
             }}
             className="rounded-full bg-brand-500 px-6 py-3 text-sm font-bold text-white"

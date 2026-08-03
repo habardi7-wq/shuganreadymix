@@ -41,23 +41,25 @@ export default async function CustomerDashboardPage() {
         ) : (
           <ul className="flex flex-col gap-3">
             {orders.map((o) => (
-              <li
-                key={o.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-ink-100 bg-white p-4 shadow-sm"
-              >
-                <div>
-                  <p className="font-bold text-ink-900">{o.code}</p>
-                  <p className="text-sm text-ink-500">
-                    {o.city.name}
-                    {o.district ? ` — ${o.district.name}` : ""} · {o.quantityM3} م³
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-700">
-                    {o.status}
-                  </span>
-                  <span className="text-xs text-ink-400">{o.quotes.length} عروض</span>
-                </div>
+              <li key={o.id}>
+                <Link
+                  href={`/customer/orders/${o.id}`}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-ink-100 bg-white p-4 shadow-sm transition hover:border-brand-300"
+                >
+                  <div>
+                    <p className="font-bold text-ink-900">{o.code}</p>
+                    <p className="text-sm text-ink-500">
+                      {o.city.name}
+                      {o.district ? ` — ${o.district.name}` : ""} · {o.quantityM3} م³
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-700">
+                      {o.status}
+                    </span>
+                    <span className="text-xs text-ink-400">{o.quotes.length} عروض</span>
+                  </div>
+                </Link>
               </li>
             ))}
           </ul>
