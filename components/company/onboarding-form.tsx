@@ -9,6 +9,9 @@ interface City {
   name: string;
 }
 
+const ALLOWED_CR_MIME_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+const MAX_CR_FILE_BYTES = 3 * 1024 * 1024;
+
 export function CompanyOnboardingForm() {
   const t = useTranslations("Company");
   const router = useRouter();
@@ -17,6 +20,10 @@ export function CompanyOnboardingForm() {
   const [nameEn, setNameEn] = useState("");
   const [crNumber, setCrNumber] = useState("");
   const [cityIds, setCityIds] = useState<string[]>([]);
+  const [crDocument, setCrDocument] = useState<{ mimeType: string; dataBase64: string } | null>(
+    null
+  );
+  const [crDocumentName, setCrDocumentName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +39,34 @@ export function CompanyOnboardingForm() {
     setCityIds((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setCrDocument(null);
+      setCrDocumentName("");
+      return;
+    }
+    if (!ALLOWED_CR_MIME_TYPES.includes(file.type)) {
+      setError(t("crDocInvalidType"));
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_CR_FILE_BYTES) {
+      setError(t("crDocTooLarge"));
+      e.target.value = "";
+      return;
+    }
+    setError(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const dataBase64 = result.slice(result.indexOf(",") + 1);
+      setCrDocument({ mimeType: file.type, dataBase64 });
+      setCrDocumentName(file.name);
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function submit() {
     setLoading(true);
     setError(null);
@@ -39,7 +74,13 @@ export function CompanyOnboardingForm() {
       const res = await fetch("/api/company/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, nameEn: nameEn || undefined, crNumber, cityIds }),
+        body: JSON.stringify({
+          name,
+          nameEn: nameEn || undefined,
+          crNumber,
+          cityIds,
+          crDocument,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
@@ -88,6 +129,22 @@ export function CompanyOnboardingForm() {
           <span className="text-xs text-ink-400">{t("crNumberHint")}</span>
         </label>
 
+        <label className="flex flex-col gap-1.5 text-sm">
+          <span className="font-semibold text-ink-800">{t("crDocument")}</span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,application/pdf"
+            onChange={handleFileChange}
+            className="rounded-xl border border-ink-200 px-4 py-3 text-sm file:me-3 file:rounded-full file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700"
+          />
+          {crDocumentName && (
+            <span className="text-xs font-medium text-green-700">
+              {t("crDocSelected")}: {crDocumentName}
+            </span>
+          )}
+          <span className="text-xs text-ink-400">{t("crDocHint")}</span>
+        </label>
+
         <div className="flex flex-col gap-1.5 text-sm">
           <span className="font-semibold text-ink-800">{t("serviceCities")}</span>
           <div className="flex flex-wrap gap-2">
@@ -112,7 +169,7 @@ export function CompanyOnboardingForm() {
 
         <button
           onClick={submit}
-          disabled={loading || !name || !crNumber || cityIds.length === 0}
+          disabled={loading || !name || !crNumber || cityIds.length === 0 || !crDocument}
           className="rounded-full bg-brand-500 py-3 text-sm font-bold text-white disabled:opacity-50"
         >
           {loading ? t("submitting") : t("submitOnboarding")}

@@ -2,6 +2,7 @@ import createIntlMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "@/i18n/routing";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
+import { REFERRAL_COOKIE } from "@/lib/referral";
 import type { Role } from "@/lib/enums";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -30,6 +31,8 @@ export default async function proxy(req: NextRequest) {
   // Admin login page itself must stay reachable without a session.
   const isAdminLoginPage = section === "admin" && segments.at(-1) === "login";
 
+  let response: NextResponse;
+
   if (requiredRole && !isAdminLoginPage) {
     const token = req.cookies.get(SESSION_COOKIE)?.value;
     const payload = token ? await verifySessionToken(token) : null;
@@ -40,11 +43,29 @@ export default async function proxy(req: NextRequest) {
       const url = req.nextUrl.clone();
       url.pathname = loginPath;
       url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
+      response = NextResponse.redirect(url);
+      return applyReferralCookie(req, response);
     }
   }
 
-  return intlMiddleware(req);
+  response = await intlMiddleware(req);
+  return applyReferralCookie(req, response);
+}
+
+// A sales-rep referral link (e.g. /?ref=KP-DEMO001) drops a 30-day cookie so
+// that whichever order the visitor eventually creates can be attributed back
+// to the rep (see referredByRepId on Order, read in app/api/orders/route.ts).
+function applyReferralCookie(req: NextRequest, response: NextResponse) {
+  const refCode = req.nextUrl.searchParams.get("ref");
+  if (refCode && /^[A-Za-z0-9-]{3,32}$/.test(refCode)) {
+    response.cookies.set(REFERRAL_COOKIE, refCode, {
+      maxAge: 60 * 60 * 24 * 30,
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+  }
+  return response;
 }
 
 export const config = {

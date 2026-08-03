@@ -3,14 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/require-role";
 import { companyOnboardingSchema } from "@/lib/validation/company";
 import { logAudit } from "@/lib/audit";
-
-function slugify(name: string, suffix: string): string {
-  const base = name
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "");
-  return `${base || "company"}-${suffix}`;
-}
+import { slugify } from "@/lib/slugify";
 
 export async function POST(req: NextRequest) {
   const { user, response } = await requireRole("COMPANY");
@@ -40,6 +33,7 @@ export async function POST(req: NextRequest) {
   }
 
   const slug = slugify(data.name, user.id.slice(-6));
+  const crDocUrl = `data:${data.crDocument.mimeType};base64,${data.crDocument.dataBase64}`;
 
   const company = await prisma.company.create({
     data: {
@@ -48,6 +42,7 @@ export async function POST(req: NextRequest) {
       nameEn: data.nameEn || null,
       slug,
       crNumber: data.crNumber,
+      crDocUrl,
       status: "PENDING_REVIEW",
       serviceAreas: {
         create: data.cityIds.map((cityId) => ({ cityId, districtId: null })),

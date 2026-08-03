@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth/require-role";
 import { createOrderSchema } from "@/lib/validation/order";
 import { logAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications/service";
+import { REFERRAL_COOKIE } from "@/lib/referral";
 
 function generateOrderCode(): string {
   const datePart = new Date()
@@ -55,6 +56,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const refCode = req.cookies.get(REFERRAL_COOKIE)?.value;
+  const referringRep = refCode
+    ? await prisma.salesRep.findFirst({
+        where: { referralCode: refCode, status: "APPROVED" },
+        select: { id: true },
+      })
+    : null;
+
   const order = await prisma.order.create({
     data: {
       code: generateOrderCode(),
@@ -70,6 +79,7 @@ export async function POST(req: NextRequest) {
       pumpType: data.pumpRequired ? data.pumpType : null,
       scheduledAt,
       notes: data.notes ?? null,
+      referredByRepId: referringRep?.id ?? null,
     },
     include: { city: true, district: true },
   });

@@ -7,6 +7,7 @@ interface CompanyRow {
   id: string;
   name: string;
   crNumber: string | null;
+  crDocUrl: string | null;
   status: string;
   user: { phone: string | null; name: string | null };
   serviceAreas: { city: { name: string } }[];
@@ -72,6 +73,18 @@ export function AdminApprovals() {
                     {t("crNumberLabel")}: {c.crNumber} · {c.user.phone} ·{" "}
                     {c.serviceAreas.map((a) => a.city.name).join(", ")}
                   </p>
+                  {c.crDocUrl ? (
+                    <a
+                      href={c.crDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-block text-xs font-semibold text-brand-700 underline"
+                    >
+                      {t("viewCrDoc")}
+                    </a>
+                  ) : (
+                    <p className="mt-1 text-xs text-ink-400">{t("noCrDoc")}</p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <button

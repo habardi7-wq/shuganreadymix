@@ -4,18 +4,8 @@ import { requireRole } from "@/lib/auth/require-role";
 import { logAudit } from "@/lib/audit";
 import { notify } from "@/lib/notifications/service";
 import { formatPhoneForDisplay } from "@/lib/phone";
+import { computeCommission } from "@/lib/commission";
 import type { CommissionType } from "@/lib/enums";
-
-function computeCommission(
-  type: CommissionType,
-  rate: number,
-  quantityM3: number,
-  totalPrice: number
-): number {
-  if (type === "PER_M3") return rate * quantityM3;
-  if (type === "PERCENTAGE") return (rate / 100) * totalPrice;
-  return rate; // FIXED
-}
 
 export async function POST(
   _req: Request,
