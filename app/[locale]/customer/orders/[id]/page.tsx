@@ -4,6 +4,11 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/navigation";
 import { QuoteAcceptButton } from "@/components/orders/quote-accept-button";
+import {
+  CompleteOrderButton,
+  RatingForm,
+  RatingDisplay,
+} from "@/components/orders/order-completion";
 
 export default async function OrderDetailPage({
   params,
@@ -25,6 +30,7 @@ export default async function OrderDetailPage({
             orderBy: { totalPrice: "asc" },
             include: { company: true },
           },
+          ratings: true,
         },
       })
     : null;
@@ -170,6 +176,22 @@ export default async function OrderDetailPage({
           </div>
         )}
       </section>
+
+      {order.status === "ACCEPTED" && (
+        <section className="mt-8 flex justify-end">
+          <CompleteOrderButton orderId={order.id} />
+        </section>
+      )}
+
+      {order.status === "COMPLETED" && (
+        <section className="mt-8">
+          {order.ratings.length > 0 ? (
+            <RatingDisplay stars={order.ratings[0].stars} comment={order.ratings[0].comment} />
+          ) : (
+            <RatingForm orderId={order.id} />
+          )}
+        </section>
+      )}
     </div>
   );
 }

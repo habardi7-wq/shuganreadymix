@@ -1,10 +1,13 @@
 import { getTranslations } from "next-intl/server";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
+import { AdminApprovals } from "@/components/admin/approvals";
+import { CommissionSettings } from "@/components/admin/commission-settings";
+import { AdminAnalytics } from "@/components/admin/analytics";
 
 export default async function AdminDashboardPage() {
   const t = await getTranslations("Dashboard");
-  const tCommon = await getTranslations("Common");
+  const tAdmin = await getTranslations("Admin");
   const user = await getCurrentUser();
 
   const [customers, companies, reps, orders, pendingCompanies, pendingReps] =
@@ -42,8 +45,26 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="mt-8 rounded-2xl border border-dashed border-ink-200 p-8 text-center text-ink-500">
-        {tCommon("comingSoon")}
+      <div className="mt-10">
+        <h2 className="text-xl font-extrabold text-ink-900">{tAdmin("approvalsTitle")}</h2>
+        <div className="mt-4">
+          <AdminApprovals />
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-xl font-extrabold text-ink-900">{tAdmin("commissionsTitle")}</h2>
+        <p className="mt-1 text-sm text-ink-500">{tAdmin("commissionsSubtitle")}</p>
+        <div className="mt-4">
+          <CommissionSettings />
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-xl font-extrabold text-ink-900">{tAdmin("analyticsTitle")}</h2>
+        <div className="mt-4">
+          <AdminAnalytics />
+        </div>
       </div>
     </div>
   );
