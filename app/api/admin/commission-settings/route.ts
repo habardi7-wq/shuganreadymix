@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireAdminPermission } from "@/lib/auth/require-admin-permission";
 import { createCommissionSettingSchema } from "@/lib/validation/commission";
 import { logAudit } from "@/lib/audit";
 
 export async function GET() {
-  const { user, response } = await requireRole("ADMIN");
+  const { user, response } = await requireAdminPermission("FINANCE_VIEW");
   if (!user) return response;
 
   const settings = await prisma.commissionSetting.findMany({
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { user, response } = await requireRole("ADMIN");
+  const { user, response } = await requireAdminPermission("FINANCE_SETTINGS");
   if (!user) return response;
 
   const json = await req.json().catch(() => null);
