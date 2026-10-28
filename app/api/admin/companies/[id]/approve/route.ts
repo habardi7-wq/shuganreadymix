@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { user, response } = await requireAdminPermission("APPROVALS_MANAGE");
-  if (!user) return response;
+  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const { id } = await params;
   const company = await prisma.company.findUnique({ where: { id } });
