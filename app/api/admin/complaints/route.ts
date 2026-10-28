@@ -4,7 +4,7 @@ import { requireAdminPermission } from "@/lib/auth/require-admin-permission";
 
 export async function GET() {
   const { user, response } = await requireAdminPermission("ORDERS_VIEW");
-  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
   const complaints = await prisma.complaint.findMany({
     include: {
       order: { select: { code: true, status: true, acceptedQuote: { select: { totalPrice: true } } } },
