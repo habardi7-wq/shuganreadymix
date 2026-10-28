@@ -24,7 +24,7 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#f58206",
+  themeColor: "#31547f",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -50,8 +50,8 @@ export async function generateMetadata(props: {
       title: t("name"),
     },
     icons: {
-      icon: "/shugan/logo.png",
-      apple: "/shugan/logo.png",
+      icon: "/brand/kharasana-pro-icon.png",
+      apple: "/brand/kharasana-pro-icon.png",
     },
     formatDetection: { telephone: false },
   };
