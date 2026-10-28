@@ -5,6 +5,7 @@ import { AdminApprovals } from "@/components/admin/approvals";
 import { CommissionSettings } from "@/components/admin/commission-settings";
 import { AdminAnalytics } from "@/components/admin/analytics";
 import { FinanceAccountability } from "@/components/admin/finance-accountability";
+import { PerformanceScorecards } from "@/components/admin/performance-scorecards";
 
 export default async function AdminDashboardPage() {
   const t = await getTranslations("Dashboard");
@@ -65,6 +66,16 @@ export default async function AdminDashboardPage() {
         <h2 className="text-xl font-extrabold text-ink-900">{tAdmin("analyticsTitle")}</h2>
         <div className="mt-4">
           <AdminAnalytics />
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-xl font-extrabold text-ink-900">تقييم الأداء</h2>
+        <p className="mt-1 text-sm text-ink-500">
+          مؤشرات الشركات والمناديب محسوبة من العمليات الفعلية في المنصة.
+        </p>
+        <div className="mt-4">
+          <PerformanceScorecards />
         </div>
       </div>
 
