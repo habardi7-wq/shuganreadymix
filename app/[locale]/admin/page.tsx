@@ -87,7 +87,10 @@ export default async function AdminDashboardPage() {
           متابعة العمولات والتسويات وآخر العمليات المنفذة داخل المنصة.
         </p>
         <div className="mt-4">
-          <FinanceAccountability />
+          <FinanceAccountability
+            canCorrect={hasAdminPermission(user, "FINANCE_CORRECT")}
+            canViewAudit={hasAdminPermission(user, "AUDIT_VIEW")}
+          />
         </div>
       </div>}
 
