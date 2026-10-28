@@ -9,7 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { user, response } = await requireAdminPermission("FINANCE_SETTINGS");
-  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const { id } = await params;
   const existing = await prisma.commissionSetting.findUnique({ where: { id } });
