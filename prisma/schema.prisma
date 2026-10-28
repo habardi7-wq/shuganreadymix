@@ -25,7 +25,9 @@ model User {
   role         String // CUSTOMER | COMPANY | SALES_REP | ADMIN
   name         String?
   status       String   @default("ACTIVE") // ACTIVE | PENDING_APPROVAL | SUSPENDED | REJECTED
-  adminLevel   String? // SUPER_ADMIN | STAFF (role = ADMIN only)
+  adminLevel   String? // SUPER_ADMIN | MANAGER | STAFF (role = ADMIN only)
+  adminGrade   Int      @default(1) // 1..5 organizational authority grade
+  permissions  String? // JSON array of explicit admin permissions
   locale       String   @default("ar")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

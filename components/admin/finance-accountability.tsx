@@ -66,7 +66,13 @@ const actionLabel: Record<string, string> = {
   COMMISSION_RESTORED: "استعادة عمولة",
 };
 
-export function FinanceAccountability() {
+export function FinanceAccountability({
+  canCorrect = false,
+  canViewAudit = false,
+}: {
+  canCorrect?: boolean;
+  canViewAudit?: boolean;
+}) {
   const [finance, setFinance] = useState<FinanceResponse | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [error, setError] = useState("");
@@ -75,19 +81,22 @@ export function FinanceAccountability() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const [financeRes, auditRes] = await Promise.all([
-        fetch("/api/admin/commissions", { cache: "no-store" }),
-        fetch("/api/admin/audit-logs?limit=50", { cache: "no-store" }),
-      ]);
-      if (!financeRes.ok || !auditRes.ok) throw new Error("تعذر تحميل بيانات المحاسبة");
+      const financeRes = await fetch("/api/admin/commissions", { cache: "no-store" });
+      if (!financeRes.ok) throw new Error("تعذر تحميل بيانات المحاسبة");
       const financeJson = (await financeRes.json()) as FinanceResponse;
-      const auditJson = (await auditRes.json()) as { ok: boolean; logs: AuditLog[] };
       setFinance(financeJson);
-      setLogs(auditJson.logs);
+
+      if (canViewAudit) {
+        const auditRes = await fetch("/api/admin/audit-logs?limit=50", { cache: "no-store" });
+        if (auditRes.ok) {
+          const auditJson = (await auditRes.json()) as { ok: boolean; logs: AuditLog[] };
+          setLogs(auditJson.logs);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
     }
-  }, []);
+  }, [canViewAudit]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -188,7 +197,7 @@ export function FinanceAccountability() {
                         </span>
                       </td>
                       <td className="p-3">
-                        <select
+                        {canCorrect ? <select
                           aria-label={`تعديل حالة عمولة الطلب ${item.order.code}`}
                           value={item.status}
                           disabled={busyId === item.id}
@@ -198,7 +207,7 @@ export function FinanceAccountability() {
                           {COMMISSION_STATUSES.map((status) => (
                             <option key={status} value={status}>{statusLabel[status]}</option>
                           ))}
-                        </select>
+                        </select> : <span className="text-xs text-ink-400">مشاهدة فقط</span>}
                       </td>
                     </tr>
                   ))}
@@ -212,6 +221,7 @@ export function FinanceAccountability() {
         </>
       )}
 
+      {canViewAudit && (
       <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm">
         <div className="border-b border-ink-100 p-5">
           <h3 className="font-extrabold text-ink-900">آخر العمليات المسجلة</h3>
@@ -233,6 +243,7 @@ export function FinanceAccountability() {
           {logs.length === 0 && <p className="p-8 text-center text-sm text-ink-500">لا توجد عمليات مسجلة بعد.</p>}
         </div>
       </div>
+      )}
     </div>
   );
 }

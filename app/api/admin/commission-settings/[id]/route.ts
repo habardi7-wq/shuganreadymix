@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireAdminPermission } from "@/lib/auth/require-admin-permission";
 import { updateCommissionSettingSchema } from "@/lib/validation/commission";
 import { logAudit } from "@/lib/audit";
 
@@ -8,7 +8,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, response } = await requireRole("ADMIN");
+  const { user, response } = await requireAdminPermission("FINANCE_SETTINGS");
   if (!user) return response;
 
   const { id } = await params;

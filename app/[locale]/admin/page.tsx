@@ -6,6 +6,8 @@ import { CommissionSettings } from "@/components/admin/commission-settings";
 import { AdminAnalytics } from "@/components/admin/analytics";
 import { FinanceAccountability } from "@/components/admin/finance-accountability";
 import { PerformanceScorecards } from "@/components/admin/performance-scorecards";
+import { StaffPermissions } from "@/components/admin/staff-permissions";
+import { hasAdminPermission } from "@/lib/admin-permissions";
 
 export default async function AdminDashboardPage() {
   const t = await getTranslations("Dashboard");
@@ -47,29 +49,29 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="mt-10">
+      {hasAdminPermission(user, "APPROVALS_MANAGE") && <div className="mt-10">
         <h2 className="text-xl font-extrabold text-ink-900">{tAdmin("approvalsTitle")}</h2>
         <div className="mt-4">
           <AdminApprovals />
         </div>
-      </div>
+      </div>}
 
-      <div className="mt-10">
+      {hasAdminPermission(user, "FINANCE_SETTINGS") && <div className="mt-10">
         <h2 className="text-xl font-extrabold text-ink-900">{tAdmin("commissionsTitle")}</h2>
         <p className="mt-1 text-sm text-ink-500">{tAdmin("commissionsSubtitle")}</p>
         <div className="mt-4">
           <CommissionSettings />
         </div>
-      </div>
+      </div>}
 
-      <div className="mt-10">
+      {hasAdminPermission(user, "ANALYTICS_VIEW") && <div className="mt-10">
         <h2 className="text-xl font-extrabold text-ink-900">{tAdmin("analyticsTitle")}</h2>
         <div className="mt-4">
           <AdminAnalytics />
         </div>
-      </div>
+      </div>}
 
-      <div className="mt-10">
+      {hasAdminPermission(user, "ANALYTICS_VIEW") && <div className="mt-10">
         <h2 className="text-xl font-extrabold text-ink-900">تقييم الأداء</h2>
         <p className="mt-1 text-sm text-ink-500">
           مؤشرات الشركات والمناديب محسوبة من العمليات الفعلية في المنصة.
@@ -77,17 +79,26 @@ export default async function AdminDashboardPage() {
         <div className="mt-4">
           <PerformanceScorecards />
         </div>
-      </div>
+      </div>}
 
-      <div className="mt-10">
+      {hasAdminPermission(user, "FINANCE_VIEW") && <div className="mt-10">
         <h2 className="text-xl font-extrabold text-ink-900">المحاسبة وسجل المسؤولية</h2>
         <p className="mt-1 text-sm text-ink-500">
           متابعة العمولات والتسويات وآخر العمليات المنفذة داخل المنصة.
         </p>
         <div className="mt-4">
-          <FinanceAccountability />
+          <FinanceAccountability
+            canCorrect={hasAdminPermission(user, "FINANCE_CORRECT")}
+            canViewAudit={hasAdminPermission(user, "AUDIT_VIEW")}
+          />
         </div>
-      </div>
+      </div>}
+
+      {hasAdminPermission(user, "STAFF_PERMISSIONS_MANAGE") && <div className="mt-10">
+        <h2 className="text-xl font-extrabold text-ink-900">الموظفون والصلاحيات</h2>
+        <p className="mt-1 text-sm text-ink-500">تحديد المستوى والدرجة والصلاحيات العملية لكل موظف إداري.</p>
+        <div className="mt-4"><StaffPermissions /></div>
+      </div>}
     </div>
   );
 }

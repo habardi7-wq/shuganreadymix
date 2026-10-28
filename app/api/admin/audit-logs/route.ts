@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireAdminPermission } from "@/lib/auth/require-admin-permission";
 
 export async function GET(req: NextRequest) {
-  const { user, response } = await requireRole("ADMIN");
+  const { user, response } = await requireAdminPermission("AUDIT_VIEW");
   if (!user) return response;
 
   const limitParam = Number(req.nextUrl.searchParams.get("limit") ?? "50");
