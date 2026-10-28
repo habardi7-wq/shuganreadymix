@@ -50,6 +50,9 @@ export function SiteHeader({ user }: { user: HeaderUser | null }) {
           <Link href="/factories" className="text-sm font-medium text-ink-700 hover:text-brand-700">
             {locale === "en" ? "Factories" : "دليل المصانع"}
           </Link>
+          <Link href="/price-index" className="text-sm font-medium text-ink-700 hover:text-brand-700">
+            {locale === "en" ? "Price index" : "مؤشر الأسعار"}
+          </Link>
           {user?.role === "CUSTOMER" && (
             <Link
               href="/customer/orders/new"
@@ -108,6 +111,9 @@ export function SiteHeader({ user }: { user: HeaderUser | null }) {
             </Link>
             <Link href="/factories" onClick={() => setOpen(false)} className="py-1 text-ink-800">
               {locale === "en" ? "Factories" : "دليل المصانع"}
+            </Link>
+            <Link href="/price-index" onClick={() => setOpen(false)} className="py-1 text-ink-800">
+              {locale === "en" ? "Price index" : "مؤشر الأسعار"}
             </Link>
             {user?.role === "CUSTOMER" && (
               <Link
