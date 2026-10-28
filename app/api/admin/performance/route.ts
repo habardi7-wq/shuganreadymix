@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/require-role";
+import { requireAdminPermission } from "@/lib/auth/require-admin-permission";
 
 function percentage(part: number, total: number) {
   return total > 0 ? Math.round((part / total) * 1000) / 10 : 0;
 }
 
 export async function GET() {
-  const { user, response } = await requireRole("ADMIN");
+  const { user, response } = await requireAdminPermission("ANALYTICS_VIEW");
   if (!user) return response;
 
   const [companies, reps] = await Promise.all([
