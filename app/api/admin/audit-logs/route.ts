@@ -4,7 +4,7 @@ import { requireAdminPermission } from "@/lib/auth/require-admin-permission";
 
 export async function GET(req: NextRequest) {
   const { user, response } = await requireAdminPermission("AUDIT_VIEW");
-  if (!user) return response;
+  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const limitParam = Number(req.nextUrl.searchParams.get("limit") ?? "50");
   const limit = Number.isFinite(limitParam)
