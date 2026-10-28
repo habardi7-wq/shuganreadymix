@@ -19,7 +19,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
 
-  const cacheableAsset = ["style", "script", "image", "font"].includes(request.destination);
+  const cacheableAsset = url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/shugan/");
   if (cacheableAsset) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
