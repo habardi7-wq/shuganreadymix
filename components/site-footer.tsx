@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -12,9 +13,13 @@ export function SiteFooter() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2 font-extrabold text-white">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-xs font-black">
-                كب
-              </span>
+              <Image
+                src="/brand/kharasana-pro-icon.png"
+                alt=""
+                width={36}
+                height={36}
+                className="h-9 w-9 rounded-xl"
+              />
               <span>{tBrand("name")}</span>
             </div>
             <p className="mt-2 max-w-sm text-sm text-ink-300">{tBrand("tagline")}</p>
