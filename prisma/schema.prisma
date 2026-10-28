@@ -38,6 +38,7 @@ model User {
   notifications Notification[]
   auditLogs     AuditLog[] @relation("AuditActor")
   ratings       Rating[]
+  quoteMessages QuoteMessage[]
 
   @@index([role, status])
 }
@@ -195,9 +196,25 @@ model Quote {
 
   acceptedForOrder Order?      @relation("AcceptedQuote")
   commission       Commission?
+  messages         QuoteMessage[]
 
   @@index([orderId])
   @@index([companyId])
+}
+
+model QuoteMessage {
+  id             String   @id @default(cuid())
+  quoteId        String
+  quote          Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  senderUserId   String
+  sender         User     @relation(fields: [senderUserId], references: [id])
+  body           String
+  attachmentUrl  String?
+  attachmentName String?
+  createdAt      DateTime @default(now())
+
+  @@index([quoteId, createdAt])
+  @@index([senderUserId])
 }
 
 // ---------------------------------------------------------------------------
