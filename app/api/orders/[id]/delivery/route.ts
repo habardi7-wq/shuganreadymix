@@ -104,6 +104,31 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "لا يمكن تنفيذ هذه الخطوة من حسابك أو من الحالة الحالية" }, { status: 409 });
   }
 
+  if (next === "DELIVERED") {
+    const loads = await prisma.deliveryLoad.findMany({
+      where: { orderId: id, status: { not: "CANCELLED" } },
+      select: { status: true, receivedQuantityM3: true },
+    });
+    if (loads.length > 0) {
+      if (loads.some((load) => load.status !== "RECEIVED")) {
+        return NextResponse.json(
+          { ok: false, error: "يجب تأكيد استلام جميع الشاحنات قبل إكمال الطلب" },
+          { status: 409 }
+        );
+      }
+      const receivedTotal = loads.reduce(
+        (sum, load) => sum + (load.receivedQuantityM3 ?? 0),
+        0
+      );
+      if (receivedTotal < participant.order.quantityM3 * 0.95) {
+        return NextResponse.json(
+          { ok: false, error: "إجمالي الكمية المستلمة أقل من الطلب. سجل مشكلة أو أضف دفعة تعويضية" },
+          { status: 409 }
+        );
+      }
+    }
+  }
+
   const note = parsed.data.note?.trim() || null;
   if ((next === "ISSUE_REPORTED" || current === "ISSUE_REPORTED") && (!note || note.length < 5)) {
     return NextResponse.json({ ok: false, error: "الملاحظة إلزامية عند تسجيل المشكلة أو معالجتها" }, { status: 400 });

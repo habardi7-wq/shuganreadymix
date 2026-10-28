@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { QuoteNegotiation } from "@/components/orders/quote-negotiation";
 import { DeliveryTracker } from "@/components/orders/delivery-tracker";
+import { DeliveryLoads } from "@/components/orders/delivery-loads";
 
 interface MyQuote {
   id: string;
@@ -141,7 +142,8 @@ export function MatchingOrders() {
           </div>
 
           {(order.status === "ACCEPTED" || order.status === "COMPLETED") && order.myQuote?.status === "ACCEPTED" && (
-            <div className="mt-5">
+            <div className="mt-5 space-y-5">
+              <DeliveryLoads orderId={order.id} />
               <DeliveryTracker orderId={order.id} />
             </div>
           )}

@@ -178,9 +178,30 @@ model Order {
   ratings     Rating[]
   commissions Commission[]
   deliveryEvents DeliveryEvent[]
+  deliveryLoads  DeliveryLoad[]
 
   @@index([status])
   @@index([cityId, districtId])
+}
+
+model DeliveryLoad {
+  id                 String    @id @default(cuid())
+  orderId            String
+  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sequence           Int
+  plannedQuantityM3  Float
+  receivedQuantityM3 Float?
+  truckNumber        String?
+  status             String    @default("PLANNED") // PLANNED | DISPATCHED | ARRIVED | RECEIVED | ISSUE_REPORTED | CANCELLED
+  note               String?
+  dispatchedAt       DateTime?
+  arrivedAt          DateTime?
+  receivedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([orderId, sequence])
+  @@index([orderId, status])
 }
 
 model DeliveryEvent {
