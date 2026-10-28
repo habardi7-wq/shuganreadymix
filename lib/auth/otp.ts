@@ -14,6 +14,7 @@ function generateCode(): string {
 }
 
 export class OtpRateLimitError extends Error {}
+export class OtpDeliveryError extends Error {}
 
 export async function requestOtp(phone: string, purpose: OtpPurpose) {
   const windowStart = new Date(Date.now() - REQUEST_WINDOW_MINUTES * 60_000);
@@ -39,17 +40,26 @@ export async function requestOtp(phone: string, purpose: OtpPurpose) {
   const code = generateCode();
   const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60_000);
 
-  await prisma.otpCode.create({
+  const record = await prisma.otpCode.create({
     data: { phone, purpose, code, expiresAt },
   });
 
-  await otpProvider.send(phone, code);
+  let deliveryChannel;
+  try {
+    deliveryChannel = await otpProvider.send(phone, code);
+  } catch (error) {
+    // A failed external delivery must not consume the resend allowance.
+    await prisma.otpCode.delete({ where: { id: record.id } }).catch(() => undefined);
+    console.error("OTP delivery failed", error);
+    throw new OtpDeliveryError("تعذر إرسال رمز التحقق حاليًا، حاول مرة أخرى بعد قليل");
+  }
 
   return {
     expiresAt,
     // Only surfaced outside production so the demo can be tested end-to-end
-    // without a real SMS gateway wired up yet.
+    // without a real WhatsApp gateway wired up yet.
     devCode: process.env.NODE_ENV === "production" ? undefined : code,
+    deliveryChannel,
   };
 }
 

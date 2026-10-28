@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { normalizeSaudiPhone } from "@/lib/phone";
 import { otpRequestSchema } from "@/lib/validation/auth";
-import { requestOtp, OtpRateLimitError } from "@/lib/auth/otp";
+import { requestOtp, OtpDeliveryError, OtpRateLimitError } from "@/lib/auth/otp";
 
 export async function POST(req: NextRequest) {
   const json = await req.json().catch(() => null);
@@ -28,11 +28,14 @@ export async function POST(req: NextRequest) {
   const purpose = existing ? "LOGIN" : "REGISTER";
 
   try {
-    const { expiresAt, devCode } = await requestOtp(phone, purpose);
-    return NextResponse.json({ ok: true, purpose, expiresAt, devCode });
+    const { expiresAt, devCode, deliveryChannel } = await requestOtp(phone, purpose);
+    return NextResponse.json({ ok: true, purpose, expiresAt, devCode, deliveryChannel });
   } catch (err) {
     if (err instanceof OtpRateLimitError) {
       return NextResponse.json({ ok: false, error: err.message }, { status: 429 });
+    }
+    if (err instanceof OtpDeliveryError) {
+      return NextResponse.json({ ok: false, error: err.message }, { status: 503 });
     }
     throw err;
   }

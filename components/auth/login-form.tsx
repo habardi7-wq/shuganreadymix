@@ -29,6 +29,7 @@ export function LoginForm({ next }: { next?: string }) {
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [purpose, setPurpose] = useState<"REGISTER" | "LOGIN" | null>(null);
   const [devCode, setDevCode] = useState<string | null>(null);
+  const [deliveryChannel, setDeliveryChannel] = useState<"WHATSAPP" | "SMS" | "CONSOLE">("WHATSAPP");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -57,6 +58,7 @@ export function LoginForm({ next }: { next?: string }) {
       }
       setPurpose(data.purpose);
       setDevCode(data.devCode ?? null);
+      setDeliveryChannel(data.deliveryChannel ?? "WHATSAPP");
       setStep("code");
       setCooldown(30);
     } catch {
@@ -170,7 +172,8 @@ export function LoginForm({ next }: { next?: string }) {
       {step === "code" && (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-ink-600">
-            {t("codeSentTo")} <span dir="ltr" className="font-semibold">{phone}</span>
+            {t(deliveryChannel === "SMS" ? "codeSentSms" : deliveryChannel === "CONSOLE" ? "codeSentDev" : "codeSentWhatsApp")} {" "}
+            <span dir="ltr" className="font-semibold">{phone}</span>
           </p>
           {devCode && (
             <p className="rounded-lg bg-ink-900 px-3 py-2 text-xs font-mono text-white">
