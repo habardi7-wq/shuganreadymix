@@ -167,7 +167,7 @@ export function FinanceAccountability({
             يمكن للإدارة تصحيح أي حالة أو إلغاء العمولة واستعادتها. لا تُحذف السجلات المالية نهائياً، وكل تعديل يحتاج سبباً ويظهر في سجل التدقيق.
           </div>
 
-          {canViewAudit && <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm">
             <div className="border-b border-ink-100 p-5">
               <h3 className="font-extrabold text-ink-900">سجل العمولات والتسويات</h3>
               <p className="mt-1 text-sm text-ink-500">الدورة المعتادة: معلّقة ثم مؤكدة ثم مدفوعة، مع إمكانية التصحيح الإداري الموثّق.</p>
