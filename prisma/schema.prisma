@@ -213,7 +213,7 @@ model Commission {
   type        String // PER_M3 | PERCENTAGE | FIXED
   rate        Float
   amount      Float
-  status      String    @default("PENDING") // PENDING | CONFIRMED | PAID
+  status      String    @default("PENDING") // PENDING | CONFIRMED | PAID | CANCELLED
   confirmedAt DateTime?
   createdAt   DateTime  @default(now())
 }

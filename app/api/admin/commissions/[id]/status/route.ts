@@ -18,9 +18,16 @@ export async function PATCH(
   const { id } = await params;
   const body = await req.json().catch(() => null);
   const nextStatus = body?.status;
+  const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
 
   if (!isCommissionStatus(nextStatus)) {
     return NextResponse.json({ ok: false, error: "حالة مالية غير صالحة" }, { status: 400 });
+  }
+  if (reason.length < 5) {
+    return NextResponse.json(
+      { ok: false, error: "سبب التعديل إلزامي ويجب ألا يقل عن 5 أحرف" },
+      { status: 400 }
+    );
   }
 
   const commission = await prisma.commission.findUnique({ where: { id } });
@@ -31,26 +38,42 @@ export async function PATCH(
   const currentStatus = commission.status as CommissionStatus;
   if (!isCommissionStatus(currentStatus) || !canTransitionCommission(currentStatus, nextStatus)) {
     return NextResponse.json(
-      { ok: false, error: "لا يمكن تنفيذ هذا الانتقال المالي" },
+      { ok: false, error: "الحالة الجديدة مطابقة للحالة الحالية أو غير صالحة" },
       { status: 409 }
     );
   }
 
+  const confirmedAt =
+    nextStatus === "PENDING" || nextStatus === "CANCELLED"
+      ? null
+      : commission.confirmedAt ?? new Date();
+
   const updated = await prisma.commission.update({
     where: { id },
-    data: {
-      status: nextStatus,
-      confirmedAt: nextStatus === "CONFIRMED" ? new Date() : commission.confirmedAt,
-    },
+    data: { status: nextStatus, confirmedAt },
   });
 
   await logAudit({
     actorUserId: user.id,
-    action: nextStatus === "CONFIRMED" ? "COMMISSION_CONFIRMED" : "COMMISSION_PAID",
+    action:
+      nextStatus === "CANCELLED"
+        ? "COMMISSION_CANCELLED"
+        : currentStatus === "CANCELLED"
+          ? "COMMISSION_RESTORED"
+          : "COMMISSION_STATUS_CORRECTED",
     entityType: "Commission",
     entityId: commission.id,
-    before: { status: currentStatus, amount: commission.amount },
-    after: { status: nextStatus, amount: updated.amount },
+    before: {
+      status: currentStatus,
+      amount: commission.amount,
+      confirmedAt: commission.confirmedAt,
+    },
+    after: {
+      status: nextStatus,
+      amount: updated.amount,
+      confirmedAt: updated.confirmedAt,
+      reason,
+    },
   });
 
   return NextResponse.json({ ok: true, commission: updated });

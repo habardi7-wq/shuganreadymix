@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/require-role";
+import { isCommissionStatus, type CommissionStatus } from "@/lib/commission-status";
 
 export async function GET() {
   const { user, response } = await requireRole("ADMIN");
@@ -26,13 +27,12 @@ export async function GET() {
     take: 200,
   });
 
-  const totals = commissions.reduce(
+  const totals = commissions.reduce<Record<CommissionStatus, number>>(
     (acc, item) => {
-      const status = item.status as "PENDING" | "CONFIRMED" | "PAID";
-      if (status in acc) acc[status] += item.amount;
+      if (isCommissionStatus(item.status)) acc[item.status] += item.amount;
       return acc;
     },
-    { PENDING: 0, CONFIRMED: 0, PAID: 0 }
+    { PENDING: 0, CONFIRMED: 0, PAID: 0, CANCELLED: 0 }
   );
 
   return NextResponse.json({ ok: true, totals, commissions });
