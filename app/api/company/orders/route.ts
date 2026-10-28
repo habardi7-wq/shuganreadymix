@@ -29,8 +29,13 @@ export async function GET() {
 
   const orders = await prisma.order.findMany({
     where: {
-      status: { in: ["NEW", "QUOTED"] },
-      OR: orConditions,
+      OR: [
+        { status: { in: ["NEW", "QUOTED"] }, OR: orConditions },
+        {
+          status: { in: ["ACCEPTED", "COMPLETED"] },
+          acceptedQuote: { is: { companyId: company.id } },
+        },
+      ],
     },
     select: {
       id: true,
@@ -47,6 +52,7 @@ export async function GET() {
       scheduledAt: true,
       notes: true,
       status: true,
+      deliveryStatus: true,
       createdAt: true,
       quotes: {
         where: { companyId: company.id },

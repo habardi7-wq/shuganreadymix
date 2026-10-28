@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { QuoteNegotiation } from "@/components/orders/quote-negotiation";
+import { DeliveryTracker } from "@/components/orders/delivery-tracker";
 
 interface MyQuote {
   id: string;
@@ -27,6 +28,7 @@ interface MatchingOrder {
   scheduledAt: string;
   notes: string | null;
   status: string;
+  deliveryStatus: string;
   myQuote: MyQuote | null;
 }
 
@@ -137,6 +139,12 @@ export function MatchingOrders() {
               </button>
             )}
           </div>
+
+          {(order.status === "ACCEPTED" || order.status === "COMPLETED") && order.myQuote?.status === "ACCEPTED" && (
+            <div className="mt-5">
+              <DeliveryTracker orderId={order.id} />
+            </div>
+          )}
 
           {order.myQuote && (order.myQuote.status === "PENDING" || order.myQuote.status === "ACCEPTED") && (
             <QuoteNegotiation quoteId={order.myQuote.id} />

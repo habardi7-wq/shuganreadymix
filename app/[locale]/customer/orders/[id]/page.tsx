@@ -6,10 +6,10 @@ import { Link } from "@/i18n/navigation";
 import { QuoteAcceptButton } from "@/components/orders/quote-accept-button";
 import { QuoteNegotiation } from "@/components/orders/quote-negotiation";
 import {
-  CompleteOrderButton,
   RatingForm,
   RatingDisplay,
 } from "@/components/orders/order-completion";
+import { DeliveryTracker } from "@/components/orders/delivery-tracker";
 
 export default async function OrderDetailPage({
   params,
@@ -182,10 +182,10 @@ export default async function OrderDetailPage({
         )}
       </section>
 
-      {order.status === "ACCEPTED" && (
-        <section className="mt-8 flex justify-end">
-          <CompleteOrderButton orderId={order.id} />
-        </section>
+      {(order.status === "ACCEPTED" || order.status === "COMPLETED") && (
+        <div className="mt-8">
+          <DeliveryTracker orderId={order.id} />
+        </div>
       )}
 
       {order.status === "COMPLETED" && (
