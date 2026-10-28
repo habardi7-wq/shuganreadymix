@@ -15,22 +15,30 @@ export async function POST(
   if (!order || order.customerId !== user.id) {
     return NextResponse.json({ ok: false, error: "الطلب غير موجود" }, { status: 404 });
   }
-  if (order.status !== "ACCEPTED") {
+  if (order.status !== "ACCEPTED" || order.deliveryStatus !== "ARRIVED") {
     return NextResponse.json(
-      { ok: false, error: "لا يمكن إتمام هذا الطلب في حالته الحالية" },
+      { ok: false, error: "يجب أن يسجل المصنع وصول الشاحنة قبل تأكيد الاستلام" },
       { status: 409 }
     );
   }
 
-  await prisma.order.update({ where: { id }, data: { status: "COMPLETED" } });
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id },
+      data: { status: "COMPLETED", deliveryStatus: "DELIVERED", deliveredAt: new Date() },
+    }),
+    prisma.deliveryEvent.create({
+      data: { orderId: id, actorUserId: user.id, status: "DELIVERED" },
+    }),
+  ]);
 
   await logAudit({
     actorUserId: user.id,
     action: "ORDER_COMPLETED",
     entityType: "Order",
     entityId: id,
-    before: { status: "ACCEPTED" },
-    after: { status: "COMPLETED" },
+    before: { status: "ACCEPTED", deliveryStatus: "ARRIVED" },
+    after: { status: "COMPLETED", deliveryStatus: "DELIVERED" },
   });
 
   return NextResponse.json({ ok: true });
