@@ -7,6 +7,7 @@ import { AdminAnalytics } from "@/components/admin/analytics";
 import { FinanceAccountability } from "@/components/admin/finance-accountability";
 import { PerformanceScorecards } from "@/components/admin/performance-scorecards";
 import { StaffPermissions } from "@/components/admin/staff-permissions";
+import { AdminComplaints } from "@/components/admin/complaints";
 import { hasAdminPermission } from "@/lib/admin-permissions";
 
 export default async function AdminDashboardPage() {
@@ -93,6 +94,12 @@ export default async function AdminDashboardPage() {
           />
         </div>
       </div>}
+
+      {hasAdminPermission(user, "ORDERS_VIEW") && <section className="mt-10">
+        <h2 className="text-xl font-extrabold text-ink-900">الشكاوى والتسويات</h2>
+        <p className="mt-1 text-sm text-ink-500">متابعة الشكاوى حسب الطلب والشاحنة، مع حفظ سبب كل قرار في سجل التدقيق.</p>
+        <div className="mt-4"><AdminComplaints canManage={hasAdminPermission(user, "ORDERS_EDIT")} /></div>
+      </section>}
 
       {hasAdminPermission(user, "STAFF_PERMISSIONS_MANAGE") && <div className="mt-10">
         <h2 className="text-xl font-extrabold text-ink-900">الموظفون والصلاحيات</h2>

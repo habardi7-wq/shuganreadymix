@@ -11,6 +11,7 @@ import {
 } from "@/components/orders/order-completion";
 import { DeliveryTracker } from "@/components/orders/delivery-tracker";
 import { DeliveryLoads } from "@/components/orders/delivery-loads";
+import { OrderComplaints } from "@/components/orders/order-complaints";
 
 export default async function OrderDetailPage({
   params,
@@ -189,6 +190,8 @@ export default async function OrderDetailPage({
           <DeliveryTracker orderId={order.id} />
         </div>
       )}
+
+      {(order.status === "ACCEPTED" || order.status === "COMPLETED") && <OrderComplaints orderId={order.id} />}
 
       {order.status === "COMPLETED" && (
         <section className="mt-8">

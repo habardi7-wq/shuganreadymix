@@ -40,6 +40,8 @@ model User {
   ratings       Rating[]
   quoteMessages QuoteMessage[]
   deliveryEvents DeliveryEvent[]
+  complaints     Complaint[] @relation("ComplaintReporter")
+  handledComplaints Complaint[] @relation("ComplaintHandler")
 
   @@index([role, status])
 }
@@ -179,6 +181,7 @@ model Order {
   commissions Commission[]
   deliveryEvents DeliveryEvent[]
   deliveryLoads  DeliveryLoad[]
+  complaints     Complaint[]
 
   @@index([status])
   @@index([cityId, districtId])
@@ -202,6 +205,7 @@ model DeliveryLoad {
 
   @@unique([orderId, sequence])
   @@index([orderId, status])
+  complaints Complaint[]
 }
 
 model DeliveryEvent {
@@ -318,6 +322,31 @@ model Rating {
   stars      Int
   comment    String?
   createdAt  DateTime @default(now())
+}
+
+model Complaint {
+  id                    String       @id @default(cuid())
+  orderId               String
+  order                 Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveryLoadId        String?
+  deliveryLoad          DeliveryLoad? @relation(fields: [deliveryLoadId], references: [id], onDelete: SetNull)
+  reporterUserId        String
+  reporter              User         @relation("ComplaintReporter", fields: [reporterUserId], references: [id])
+  handlerUserId         String?
+  handler               User?        @relation("ComplaintHandler", fields: [handlerUserId], references: [id])
+  category              String // DELIVERY | QUALITY | QUANTITY | BILLING | SERVICE | OTHER
+  description           String
+  status                String       @default("OPEN") // OPEN | UNDER_REVIEW | RESOLVED | REJECTED
+  requestedAdjustmentSar Float?
+  approvedAdjustmentSar Float?
+  resolutionNote        String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  closedAt              DateTime?
+
+  @@index([orderId, status])
+  @@index([reporterUserId, createdAt])
+  @@index([status, createdAt])
 }
 
 model AuditLog {
