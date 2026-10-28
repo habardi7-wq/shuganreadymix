@@ -22,6 +22,20 @@ export async function POST(
     );
   }
 
+  const loads = await prisma.deliveryLoad.findMany({
+    where: { orderId: id, status: { not: "CANCELLED" } },
+    select: { status: true, receivedQuantityM3: true },
+  });
+  if (loads.length > 0) {
+    const receivedTotal = loads.reduce((sum, load) => sum + (load.receivedQuantityM3 ?? 0), 0);
+    if (loads.some((load) => load.status !== "RECEIVED") || receivedTotal < order.quantityM3 * 0.95) {
+      return NextResponse.json(
+        { ok: false, error: "يجب تأكيد كل الشاحنات وتسوية فرق الكمية قبل إكمال الطلب" },
+        { status: 409 }
+      );
+    }
+  }
+
   await prisma.$transaction([
     prisma.order.update({
       where: { id },
