@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 interface InstallPromptEvent extends Event {
@@ -62,8 +63,10 @@ export function PwaInstaller() {
   return (
     <aside className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-md rounded-2xl border border-ink-200 bg-white p-4 shadow-2xl sm:inset-x-auto sm:start-4">
       <button onClick={dismiss} aria-label="إغلاق" className="absolute end-3 top-2 text-xl text-ink-400">×</button>
-      <div className="pe-7">
-        <p className="font-extrabold text-ink-900">ثبّت خرسانة برو على جوالك</p>
+      <div className="flex items-start gap-3 pe-7">
+        <Image src="/brand/kharasana-pro-icon.png" alt="" width={44} height={44} className="h-11 w-11 rounded-xl" />
+        <div>
+          <p className="font-extrabold text-ink-900">ثبّت خرسانة برو على جوالك</p>
         {showIosHelp && !prompt ? (
           <p className="mt-1 text-sm leading-6 text-ink-600">
             من Safari اضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية».
@@ -71,6 +74,7 @@ export function PwaInstaller() {
         ) : (
           <p className="mt-1 text-sm text-ink-600">وصول أسرع وتجربة بملء الشاشة مثل التطبيق.</p>
         )}
+        </div>
       </div>
       {prompt && (
         <button onClick={() => void install()} className="mt-3 w-full rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-600">
