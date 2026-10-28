@@ -18,6 +18,9 @@ export function PwaInstaller() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    }
     if (isStandalone() || localStorage.getItem("pwa-install-dismissed") === "1") return;
 
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
