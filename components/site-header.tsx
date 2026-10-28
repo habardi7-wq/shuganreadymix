@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -37,9 +38,14 @@ export function SiteHeader({ user }: { user: HeaderUser | null }) {
     <header className="sticky top-0 z-40 border-b border-ink-100 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 font-extrabold text-ink-900">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 text-sm font-black text-white">
-            كب
-          </span>
+          <Image
+            src="/brand/kharasana-pro-icon.png"
+            alt=""
+            width={40}
+            height={40}
+            priority
+            className="h-10 w-10 rounded-xl"
+          />
           <span className="text-lg">{tBrand("name")}</span>
         </Link>
 
