@@ -2,8 +2,9 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
-export default async function HomePage() {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const t = await getTranslations("Home");
+  const { locale } = await params;
 
   const steps = [
     { title: t("step1Title"), desc: t("step1Desc"), n: "01" },
@@ -39,6 +40,12 @@ export default async function HomePage() {
               className="rounded-full bg-brand-500 px-6 py-3 text-center text-sm font-bold text-white shadow-md shadow-brand-500/30 transition hover:bg-brand-600"
             >
               {t("ctaOrder")}
+            </Link>
+            <Link
+              href="/factories"
+              className="rounded-full border border-ink-200 bg-white px-6 py-3 text-center text-sm font-bold text-ink-800 transition hover:border-brand-400"
+            >
+              {locale === "en" ? "Browse verified factories" : "تصفح المصانع الموثقة"}
             </Link>
             <a
               href="#how-it-works"
