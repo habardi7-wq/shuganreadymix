@@ -54,7 +54,20 @@ export function OrderComplaints({ orderId }: { orderId: string }) {
     }
   }
 
-  useEffect(() => { void refresh(); }, [orderId]);
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetch(`/api/orders/${orderId}/complaints`, { cache: "no-store" }),
+      fetch(`/api/orders/${orderId}/loads`, { cache: "no-store" }),
+    ])
+      .then(async ([complaintResponse, loadResponse]) => {
+        if (!active) return;
+        if (complaintResponse.ok) setItems((await complaintResponse.json()).complaints ?? []);
+        if (loadResponse.ok) setLoads((await loadResponse.json()).loads ?? []);
+      })
+      .catch(() => { if (active) setMessage("تعذر تحميل الشكاوى حالياً."); });
+    return () => { active = false; };
+  }, [orderId]);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
