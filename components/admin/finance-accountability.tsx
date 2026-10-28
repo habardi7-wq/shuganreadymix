@@ -221,6 +221,7 @@ export function FinanceAccountability({
         </>
       )}
 
+      {canViewAudit && (
       <div className="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-sm">
         <div className="border-b border-ink-100 p-5">
           <h3 className="font-extrabold text-ink-900">آخر العمليات المسجلة</h3>
@@ -241,7 +242,8 @@ export function FinanceAccountability({
           ))}
           {logs.length === 0 && <p className="p-8 text-center text-sm text-ink-500">لا توجد عمليات مسجلة بعد.</p>}
         </div>
-      </div>}
+      </div>
+      )}
     </div>
   );
 }
