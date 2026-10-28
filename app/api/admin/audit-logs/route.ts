@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/auth/require-role";
+
+export async function GET(req: NextRequest) {
+  const { user, response } = await requireRole("ADMIN");
+  if (!user) return response;
+
+  const limitParam = Number(req.nextUrl.searchParams.get("limit") ?? "50");
+  const limit = Number.isFinite(limitParam)
+    ? Math.min(100, Math.max(10, Math.trunc(limitParam)))
+    : 50;
+
+  const logs = await prisma.auditLog.findMany({
+    select: {
+      id: true,
+      action: true,
+      entityType: true,
+      entityId: true,
+      beforeJson: true,
+      afterJson: true,
+      ip: true,
+      createdAt: true,
+      actor: { select: { name: true, role: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+
+  return NextResponse.json({ ok: true, logs });
+}
