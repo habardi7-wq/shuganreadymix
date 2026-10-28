@@ -7,7 +7,7 @@ import { normalizeAdminPermissions } from "@/lib/admin-permissions";
 
 export async function GET() {
   const { user, response } = await requireAdminPermission("STAFF_PERMISSIONS_MANAGE");
-  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const staff = await prisma.user.findMany({
     where: { role: "ADMIN" },
@@ -29,7 +29,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const { user, response } = await requireAdminPermission("STAFF_PERMISSIONS_MANAGE");
-  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const body = await req.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
