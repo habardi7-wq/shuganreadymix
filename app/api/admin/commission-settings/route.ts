@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 
 export async function GET() {
   const { user, response } = await requireAdminPermission("FINANCE_VIEW");
-  if (!user) return response;
+  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const settings = await prisma.commissionSetting.findMany({
     include: { company: { select: { name: true } } },
@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const { user, response } = await requireAdminPermission("FINANCE_SETTINGS");
-  if (!user) return response;
+  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const json = await req.json().catch(() => null);
   const parsed = createCommissionSettingSchema.safeParse(json);
