@@ -30,7 +30,17 @@ export function AdminComplaints({ canManage }: { canManage: boolean }) {
     if (response.ok) setItems((await response.json()).complaints ?? []);
     else setError("تعذر تحميل الشكاوى. تحقق من صلاحية مشاهدة الطلبات.");
   }
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/complaints", { cache: "no-store" })
+      .then(async (response) => {
+        if (!active) return;
+        if (response.ok) setItems((await response.json()).complaints ?? []);
+        else setError("تعذر تحميل الشكاوى. تحقق من صلاحية مشاهدة الطلبات.");
+      })
+      .catch(() => { if (active) setError("تعذر الاتصال بالخادم."); });
+    return () => { active = false; };
+  }, []);
 
   async function change(item: CaseItem, status: string) {
     if (!canManage) return;
