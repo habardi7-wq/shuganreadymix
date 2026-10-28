@@ -8,7 +8,7 @@ function percentage(part: number, total: number) {
 
 export async function GET() {
   const { user, response } = await requireAdminPermission("ANALYTICS_VIEW");
-  if (!user) return response;
+  if (!user || !response) return NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const [companies, reps] = await Promise.all([
     prisma.company.findMany({
