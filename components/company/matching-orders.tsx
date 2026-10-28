@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { QuoteNegotiation } from "@/components/orders/quote-negotiation";
 
 interface MyQuote {
   id: string;
@@ -136,6 +137,10 @@ export function MatchingOrders() {
               </button>
             )}
           </div>
+
+          {order.myQuote && (order.myQuote.status === "PENDING" || order.myQuote.status === "ACCEPTED") && (
+            <QuoteNegotiation quoteId={order.myQuote.id} />
+          )}
 
           {openFormFor === order.id && (
             <QuoteForm
