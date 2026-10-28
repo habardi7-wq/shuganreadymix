@@ -25,10 +25,12 @@ export function PwaInstaller() {
 
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const safari = /safari/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent);
-    if (ios && safari) {
-      setShowIosHelp(true);
-      setVisible(true);
-    }
+    const iosTimer = ios && safari
+      ? window.setTimeout(() => {
+          setShowIosHelp(true);
+          setVisible(true);
+        }, 0)
+      : null;
 
     const onPrompt = (event: Event) => {
       event.preventDefault();
@@ -36,7 +38,10 @@ export function PwaInstaller() {
       setVisible(true);
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+    return () => {
+      if (iosTimer !== null) window.clearTimeout(iosTimer);
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+    };
   }, []);
 
   function dismiss() {
