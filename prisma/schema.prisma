@@ -39,6 +39,7 @@ model User {
   auditLogs     AuditLog[] @relation("AuditActor")
   ratings       Rating[]
   quoteMessages QuoteMessage[]
+  deliveryEvents DeliveryEvent[]
 
   @@index([role, status])
 }
@@ -164,6 +165,8 @@ model Order {
   scheduledAt     DateTime
   notes           String?
   status          String    @default("NEW") // NEW | QUOTED | ACCEPTED | COMPLETED | CANCELLED
+  deliveryStatus  String    @default("NOT_SCHEDULED") // NOT_SCHEDULED | SCHEDULED | DISPATCHED | ARRIVED | DELIVERED | ISSUE_REPORTED
+  deliveredAt     DateTime?
   referredByRepId String?
   referredByRep   SalesRep? @relation(fields: [referredByRepId], references: [id])
   acceptedQuoteId String?   @unique
@@ -174,9 +177,24 @@ model Order {
   quotes      Quote[]      @relation("OrderQuotes")
   ratings     Rating[]
   commissions Commission[]
+  deliveryEvents DeliveryEvent[]
 
   @@index([status])
   @@index([cityId, districtId])
+}
+
+model DeliveryEvent {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actorUserId String
+  actor       User     @relation(fields: [actorUserId], references: [id])
+  status      String // SCHEDULED | DISPATCHED | ARRIVED | DELIVERED | ISSUE_REPORTED
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([actorUserId])
 }
 
 model Quote {
