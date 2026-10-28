@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitcher } from "./locale-switcher";
@@ -21,6 +21,7 @@ const DASHBOARD_PATH: Record<string, string> = {
 
 export function SiteHeader({ user }: { user: HeaderUser | null }) {
   const t = useTranslations("Nav");
+  const locale = useLocale();
   const tBrand = useTranslations("Brand");
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -45,6 +46,9 @@ export function SiteHeader({ user }: { user: HeaderUser | null }) {
         <nav className="hidden items-center gap-6 md:flex">
           <Link href="/" className="text-sm font-medium text-ink-700 hover:text-brand-700">
             {t("home")}
+          </Link>
+          <Link href="/factories" className="text-sm font-medium text-ink-700 hover:text-brand-700">
+            {locale === "en" ? "Factories" : "دليل المصانع"}
           </Link>
           {user?.role === "CUSTOMER" && (
             <Link
@@ -101,6 +105,9 @@ export function SiteHeader({ user }: { user: HeaderUser | null }) {
           <div className="flex flex-col gap-3">
             <Link href="/" onClick={() => setOpen(false)} className="py-1 text-ink-800">
               {t("home")}
+            </Link>
+            <Link href="/factories" onClick={() => setOpen(false)} className="py-1 text-ink-800">
+              {locale === "en" ? "Factories" : "دليل المصانع"}
             </Link>
             {user?.role === "CUSTOMER" && (
               <Link
