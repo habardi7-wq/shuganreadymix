@@ -4,19 +4,18 @@
   --background: #f7f7f5;
   --foreground: #1c1917;
 
-  /* Kharasana Pro brand identity — independent from any single supplier's
-     colors. Warm amber (concrete/construction) + charcoal, echoing rebar and
-     poured concrete. */
-  --color-brand-50: #fff8ec;
-  --color-brand-100: #ffedc9;
-  --color-brand-200: #ffd889;
-  --color-brand-300: #ffbd4a;
-  --color-brand-400: #fda21e;
-  --color-brand-500: #f58206;
-  --color-brand-600: #d76502;
-  --color-brand-700: #b24805;
-  --color-brand-800: #90390b;
-  --color-brand-900: #77300e;
+  /* Official Kharasana Pro identity: concrete blue with a turquoise accent. */
+  --color-brand-50: #f1f6fa;
+  --color-brand-100: #dce9f3;
+  --color-brand-200: #bdd5e7;
+  --color-brand-300: #91b8d3;
+  --color-brand-400: #648faf;
+  --color-brand-500: #31547f;
+  --color-brand-600: #294970;
+  --color-brand-700: #233e60;
+  --color-brand-800: #1e3450;
+  --color-brand-900: #192b43;
+  --color-accent-500: #43d8dc;
 
   --color-ink-50: #f6f6f5;
   --color-ink-100: #e7e6e3;
@@ -49,6 +48,7 @@
   --color-brand-700: var(--color-brand-700);
   --color-brand-800: var(--color-brand-800);
   --color-brand-900: var(--color-brand-900);
+  --color-accent-500: var(--color-accent-500);
 
   --color-ink-50: var(--color-ink-50);
   --color-ink-100: var(--color-ink-100);
