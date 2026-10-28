@@ -8,7 +8,7 @@ import { canTransitionComplaint, isComplaintStatus, type ComplaintStatus } from 
 
 export async function GET() {
   const { user, response } = await requireAdminPermission("ORDERS_VIEW");
-  if (!user) return response;
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
   const complaints = await prisma.complaint.findMany({
     include: {
       order: { select: { code: true, status: true, acceptedQuote: { select: { totalPrice: true } } } },
@@ -30,7 +30,7 @@ const schema = z.object({
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { user, response } = await requireAdminPermission("ORDERS_EDIT");
-  if (!user) return response;
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
   const { id } = await params;
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);

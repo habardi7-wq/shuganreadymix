@@ -13,7 +13,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { user, response } = await requireAdminPermission("FINANCE_CORRECT");
-  if (!user) return response;
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json().catch(() => null);

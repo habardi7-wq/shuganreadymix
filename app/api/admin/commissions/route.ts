@@ -5,7 +5,7 @@ import { isCommissionStatus, type CommissionStatus } from "@/lib/commission-stat
 
 export async function GET() {
   const { user, response } = await requireAdminPermission("FINANCE_VIEW");
-  if (!user) return response;
+  if (!user) return response ?? NextResponse.json({ ok: false, error: "غير مصرح" }, { status: 403 });
 
   const commissions = await prisma.commission.findMany({
     include: {
