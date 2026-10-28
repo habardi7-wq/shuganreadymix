@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cairo, Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WhatsAppButton } from "@/components/whatsapp-button";
+import { PwaInstaller } from "@/components/pwa-installer";
 import "../globals.css";
 
 const cairo = Cairo({
@@ -22,6 +23,13 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#f58206",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -34,6 +42,18 @@ export async function generateMetadata(props: {
   return {
     title: `${t("name")} | ${t("tagline")}`,
     description: t("tagline"),
+    manifest: "/manifest.webmanifest",
+    applicationName: t("name"),
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: t("name"),
+    },
+    icons: {
+      icon: "/shugan/logo.png",
+      apple: "/shugan/logo.png",
+    },
+    formatDetection: { telephone: false },
   };
 }
 
@@ -65,6 +85,7 @@ export default async function LocaleLayout({
           <main className="flex-1">{children}</main>
           <SiteFooter />
           <WhatsAppButton />
+          <PwaInstaller />
         </NextIntlClientProvider>
       </body>
     </html>
