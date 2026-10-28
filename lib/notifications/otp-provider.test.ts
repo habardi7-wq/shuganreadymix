@@ -75,10 +75,9 @@ describe("createOtpProvider selection", () => {
   });
 
   it("fails closed in production when no delivery provider is configured", () => {
-    const oldNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     expect(createOtpProvider()).toBeInstanceOf(UnavailableOtpProvider);
-    process.env.NODE_ENV = oldNodeEnv;
+    vi.unstubAllEnvs();
   });
 
   it("stays on the console provider when Unifonic env vars are only partially set", () => {
