@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { otpProvider } from "@/lib/notifications/otp-provider";
 import type { OtpPurpose } from "@/lib/enums";
@@ -9,7 +10,7 @@ const MAX_REQUESTS_PER_WINDOW = 5;
 const REQUEST_WINDOW_MINUTES = 15;
 
 function generateCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100_000, 1_000_000));
 }
 
 export class OtpRateLimitError extends Error {}
