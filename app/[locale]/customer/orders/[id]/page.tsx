@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
 import { Link } from "@/i18n/navigation";
 import { QuoteAcceptButton } from "@/components/orders/quote-accept-button";
+import { QuoteNegotiation } from "@/components/orders/quote-negotiation";
 import {
   CompleteOrderButton,
   RatingForm,
@@ -164,6 +165,10 @@ export default async function OrderDetailPage({
                   <p className="mt-2 rounded-lg bg-ink-50 p-3 text-sm text-ink-600">
                     {quote.notes}
                   </p>
+                )}
+
+                {(quote.status === "PENDING" || quote.status === "ACCEPTED") && (
+                  <QuoteNegotiation quoteId={quote.id} />
                 )}
 
                 {quote.status === "PENDING" && order.status !== "ACCEPTED" && (
