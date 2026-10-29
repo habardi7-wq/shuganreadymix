@@ -47,3 +47,6 @@ jobs:
 
       - name: Verify order finance column privileges
         run: psql -v ON_ERROR_STOP=1 -f db/tests/order-finance-privileges.sql
+
+      - name: Verify secure priced order RPC
+        run: psql -v ON_ERROR_STOP=1 -f db/tests/order-creation-rpc.sql
