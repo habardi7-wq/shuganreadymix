@@ -13,7 +13,7 @@ begin
  insert into public.orders(id,factory_id,customer_name,neighborhood,concrete_grade,pour_type,quantity_m3,price_per_m3,cost_per_m3)
  values(oa,fa,'Customer A','Rimal','C30','Slab',10,200,170),(ob,fb,'Customer B','Yarmouk','C35','Foundation',20,210,180);
  insert into tenant_fixture values(a,b,fa,fb,oa,ob);
-end $;
+end $$;
 grant select on tenant_fixture to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claim.sub',(select uid_a::text from tenant_fixture),true);
