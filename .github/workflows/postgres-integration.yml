@@ -40,3 +40,5 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f db/tests/inventory-smoke.sql
       - name: Test RLS deny-by-default without authenticated identity
         run: psql -v ON_ERROR_STOP=1 -f db/tests/rls-deny-default.sql
+      - name: Test two-factory tenant isolation and role enforcement
+        run: psql -v ON_ERROR_STOP=1 -f db/tests/tenant-isolation.sql
