@@ -16,11 +16,11 @@ grant select on order_rpc_ids to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claim.sub',(select a::text from order_rpc_ids),true);
 do $$
-declare id uuid;
+declare v_created uuid;
 begin
- select public.create_priced_order((select fa from order_rpc_ids),'Test Customer','Rimal','C30','Slab',10,200,160) into id;
- if id is null then raise exception 'Authorized order not created'; end if;
- if not exists(select 1 from public.orders where id=id) then raise exception 'Order not readable';end if;
+ select public.create_priced_order((select fa from order_rpc_ids),'Test Customer','Rimal','C30','Slab',10,200,160) into v_created;
+ if v_created is null then raise exception 'Authorized order not created'; end if;
+ if not exists(select 1 from public.orders where id=v_created) then raise exception 'Order not readable';end if;
  begin
   perform public.create_priced_order((select fb from order_rpc_ids),'Attack','Rimal','C30','Slab',10,200,160);
   raise exception 'Cross tenant order permitted';
