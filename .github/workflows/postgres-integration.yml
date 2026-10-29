@@ -37,6 +37,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f db/002_hardening.sql
           psql -v ON_ERROR_STOP=1 -f db/003_inventory_ledger.sql
           psql -v ON_ERROR_STOP=1 -f db/004_order_financial_read_hardening.sql
+          psql -v ON_ERROR_STOP=1 -f db/005_secure_order_creation.sql
       - name: Run inventory transaction integration test
         run: psql -v ON_ERROR_STOP=1 -f db/tests/inventory-smoke.sql
       - name: Test RLS deny-by-default without authenticated identity
