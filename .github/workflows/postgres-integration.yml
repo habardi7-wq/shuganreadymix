@@ -43,3 +43,6 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f db/tests/rls-deny-default.sql
       - name: Test two-factory tenant isolation and role enforcement
         run: psql -v ON_ERROR_STOP=1 -f db/tests/tenant-isolation.sql
+
+      - name: Verify order finance column privileges
+        run: psql -v ON_ERROR_STOP=1 -f db/tests/order-finance-privileges.sql
