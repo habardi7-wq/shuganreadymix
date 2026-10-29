@@ -5,8 +5,11 @@ export function quote({componentsHalalas, marginBasisPoints, quantityLiters}) {
   if (!Number.isSafeInteger(quantityLiters) || quantityLiters <= 0) throw new RangeError('Invalid concrete volume');
   const costPerM3 = componentsHalalas.reduce((a,b)=>a+b,0);
   if(!Number.isSafeInteger(costPerM3)) throw new RangeError('Cost overflow');
-  const pricePerM3 = Math.ceil(costPerM3*10000/(10000-marginBasisPoints));
+  const exactPrice = costPerM3*10000/(10000-marginBasisPoints);
+  if (!Number.isFinite(exactPrice) || exactPrice > Number.MAX_SAFE_INTEGER) throw new RangeError('Price overflow');
+  const pricePerM3 = Math.ceil(exactPrice);
   if(!Number.isSafeInteger(pricePerM3)) throw new RangeError('Price overflow');
+  if (costPerM3*quantityLiters > Number.MAX_SAFE_INTEGER || pricePerM3*quantityLiters > Number.MAX_SAFE_INTEGER) throw new RangeError('Total overflow');
   const totalCost = Math.round(costPerM3*quantityLiters/1000);
   const totalRevenue = Math.round(pricePerM3*quantityLiters/1000);
   if (![totalCost,totalRevenue].every(Number.isSafeInteger)) throw new RangeError('Total overflow');
