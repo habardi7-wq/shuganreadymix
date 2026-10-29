@@ -15,7 +15,7 @@ begin
   perform public.post_inventory_movement(f,m,e,30000,'receipt');
   raise exception 'Conflicting idempotency key was accepted';
  exception when others then
-  if sqlerrm='Conflicting idempotency key was accepted' then raise;end if;
+  if sqlerrm <> 'Conflicting idempotency key' then raise;end if;
  end;
  perform public.post_inventory_movement(f,m,gen_random_uuid(),-25000,'production');
  select quantity into balance_qty from public.inventory_balances where factory_id=f and material_id=m;
@@ -24,7 +24,7 @@ begin
   perform public.post_inventory_movement(f,m,gen_random_uuid(),-20000,'production');
   raise exception 'Negative stock was accepted';
  exception when others then
-  if sqlerrm='Negative stock was accepted' then raise;end if;
+  if sqlerrm <> 'Insufficient stock or overflow' then raise;end if;
  end;
 end $$;
 rollback;
