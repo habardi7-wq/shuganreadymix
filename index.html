@@ -36,7 +36,8 @@
 <section id="finance"><h2>المالية وإثبات الأثر</h2><div class="card"><form id="expenseForm"><div class="grid"><div><label>وصف المصروف</label><input name="desc" required></div><div><label>القيمة (ر.س)</label><input type="number" name="amount" required min=".01" step=".01"></div><div><label>التصنيف</label><select name="category"><option>مصروف إداري</option><option>صيانة</option><option>اشتراك</option><option>أخرى</option></select></div></div><button class="primary">حفظ مصروف</button></form></div><div class="card" id="financeStats"></div><div class="card scroll"><table><thead><tr><th>المصروف</th><th>التصنيف</th><th>القيمة</th><th>إجراء</th></tr></thead><tbody id="expenseTable"></tbody></table></div><p class="muted">هذا سجل إداري أولي، وليس دفتر أستاذ أو نظام محاسبة معتمد أو فوترة إلكترونية.</p></section>
 <section id="settings"><h2>البيانات والنسخ الاحتياطي</h2><div class="card"><p>احفظ نسخة احتياطية محليًا؛ حذف بيانات المتصفح قد يزيل كل السجلات. لا توجد مزامنة مع الأجهزة الأخرى.</p><button id="export">تصدير JSON</button> <button id="exportCsv">تصدير الطلبات CSV</button><p><label>استيراد نسخة JSON</label><input id="importFile" type="file" accept=".json,application/json"></p><button class="danger" id="clear">مسح البيانات المحلية</button></div></section>
 </main><footer>خرسانة برو — نسخة إثبات مفهوم. لا تستخدم بيانات مالية أو تشغيلية حساسة قبل تفعيل الخادم والمصادقة والصلاحيات.</footer>
-<script>
+<script type="module">
+import {quote} from "./src/cost-engine.mjs";
 "use strict";
 const KEY="kharasana-pilot-v1",empty=()=>({orders:[],suppliers:[],rfqs:[],expenses:[]});
 let data=load();const pages=[["dashboard","لوحة القيادة"],["orders","الصبات"],["costing","تكلفة المتر"],["suppliers","الموردون"],["purchasing","المشتريات"],["documents","رفع البروفايل"],["market","السوق"],["finance","المالية"],["settings","النسخ الاحتياطي"]];
@@ -63,7 +64,23 @@ $("financeStats").innerHTML='<h3>ملخص مالي تشغيلي (غير محاس
 let m={};for(let o of delivered){let k=o.area+" | "+o.mix+" | "+o.pour;m[k]=(m[k]||0)+o.qty} $("marketTable").innerHTML=Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<p>'+safe(k)+': <b>'+v.toFixed(1)+' م³</b></p>').join("")||"ابدأ بتسجيل الصبات لمعرفة أنماط الطلب المرصود.";
 $("opportunities").textContent="لا يمكن توقع طلب الأحياء أو مقارنة الحصة السوقية دون مصادر سوق معتمدة وبيانات تاريخية كافية.";
 }
-function compute(){let ids=["cement","aggregate","additives","operations","overhead","delivery","target","costqty"];let v=Object.fromEntries(ids.map(id=>[id,num($(id).value)]));if(Object.values(v).some(x=>!Number.isFinite(x)||x<0)||v.target>=100||v.costqty<=0){$("costResult").innerHTML='<p class="error">تحقق من المدخلات</p>';return null}let cost=v.cement+v.aggregate+v.additives+v.operations+v.overhead+v.delivery,price=cost/(1-v.target/100);$("costResult").innerHTML=[["تكلفة المتر",money(cost)],["سعر مقترح قبل الضريبة",money(price)],["ربح المتر",money(price-cost)],["ربح الطلب المستهدف",money((price-cost)*v.costqty)]].map(([l,n])=>'<div class="card"><small>'+l+'</small><div class="metric">'+n+'</div></div>').join("");return{cost,price,qty:v.costqty}}
+function compute(){
+ const ids=["cement","aggregate","additives","operations","overhead","delivery","target","costqty"];
+ const v=Object.fromEntries(ids.map(id=>[id,Number($(id).value)]));
+ if(ids.some(id=>$(id).value.trim()==="")||Object.values(v).some(x=>!Number.isFinite(x)||x<0)){
+   $("costResult").innerHTML='<p class="error">تحقق من المدخلات</p>';return null;
+ }
+ try{
+   const componentsHalalas=ids.slice(0,6).map(id=>Math.round(v[id]*100));
+   const marginBasisPoints=Math.round(v.target*100);
+   const quantityLiters=Math.round(v.costqty*1000);
+   if(Math.abs(quantityLiters/1000-v.costqty)>0.000001)throw Error("الكمية لا يمكن أن تتجاوز 3 منازل عشرية");
+   const result=quote({componentsHalalas,marginBasisPoints,quantityLiters});
+   const cost=result.costPerM3Halalas/100,price=result.pricePerM3Halalas/100;
+   $("costResult").innerHTML=[["تكلفة المتر",money(cost)],["سعر مقترح قبل الضريبة",money(price)],["ربح المتر",money(price-cost)],["ربح الطلب المستهدف",money(result.grossProfitHalalas/100)]].map(([l,n])=>'<div class="card"><small>'+l+'</small><div class="metric">'+n+'</div></div>').join("");
+   return {cost,price,qty:v.costqty};
+ }catch(e){$("costResult").textContent="مدخلات غير صحيحة: "+e.message;return null}
+}
 $("costForm").addEventListener("input",compute);$("costCopy").onclick=()=>{let c=compute();if(c)navigator.clipboard.writeText("تكلفة المتر: "+money(c.cost)+" | سعر البيع: "+money(c.price)+" | كمية الطلب: "+c.qty+" م³").then(()=>alert("تم النسخ")).catch(()=>alert("النسخ غير متاح في هذا المتصفح"))};
 $("profileFile").onchange=async e=>{let f=e.target.files[0];if(!f)return;if(f.size>2e6){alert("الحد الأقصى 2MB");return}$("profileText").value=await f.text()};
 $("extract").onclick=()=>{let text=$("profileText").value;if(!text.trim()){alert("أدخل النص أولًا");return}let patterns=[["رقم السجل",/(?:رقم السجل التجاري|CR\s*(?:Number|No\.?)?)\s*[:：-]?\s*([0-9]{10})/i],["الرقم الضريبي",/(?:الرقم الضريبي|VAT\s*(?:Registration)?\s*(?:Number|No\.?)?)\s*[:：-]?\s*([0-9]{15})/i],["رقم هاتف",/(?:\+966|05)\d{8,9}/],["البريد",/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/]];let found=patterns.map(([label,p])=>[label,text.match(p)?.[1]||text.match(p)?.[0]||"غير موجود"]);$("profileResult").innerHTML='<h3>مسودة استخراج تحتاج مراجعتك</h3>'+found.map(([k,v])=>'<p>'+k+': <b>'+safe(v)+'</b></p>').join("")+'<p class="muted">لا تُحفظ بيانات المستند تلقائيًا ولا يُعد الاستخراج توثيقًا رسميًا.</p>'};
