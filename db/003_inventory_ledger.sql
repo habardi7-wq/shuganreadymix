@@ -65,6 +65,7 @@ begin
    end if;
    return v_id;
  end if;
+ if (p_delta = '-9223372036854775808'::bigint) then raise exception 'Invalid movement overflow';end if;
  if (p_delta<0 and v_balance < -p_delta) or (p_delta>0 and v_balance > 9223372036854775807-p_delta) then
   raise exception 'Insufficient stock or overflow';
  end if;
