@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const foundation=readFileSync(new URL('../db/001_foundation.sql',import.meta.url),'utf8');
+const hardening=readFileSync(new URL('../db/002_hardening.sql',import.meta.url),'utf8');
+const entities=['factories','factory_members','orders','suppliers','purchase_requests','expenses','audit_events'];
+test('every tenant table has RLS enabled',()=>{for(const table of entities)assert.match(foundation,new RegExp('alter table public\\.'+table+' enable row level security','i'))});
+test('tenant operating tables have factory-scoped policies',()=>{for(const table of ['orders','suppliers','purchase_requests','expenses'])assert.match(foundation,new RegExp('create policy '+table.replace('_requests','_requests')+'_select[\\s\\S]*?public\\.has_factory_role\\(factory_id','i'))});
+test('memberships cannot be changed from untrusted authenticated clients',()=>{assert.match(hardening,/revoke all on public\.factory_members from anon, authenticated/i);assert.match(hardening,/grant select on public\.factory_members to authenticated/i);assert.doesNotMatch(hardening,/grant (?:all|insert|update|delete) on public\.factory_members to authenticated/i)});
+test('audit data cannot be changed by untrusted clients',()=>{assert.match(hardening,/revoke all on public\.audit_events from anon, authenticated/i);assert.match(hardening,/grant select on public\.audit_events to authenticated/i)});
+test('no client policy allows direct factory or membership inserts',()=>{assert.doesNotMatch(foundation,/create policy (?:factories|members)_insert/i)});
