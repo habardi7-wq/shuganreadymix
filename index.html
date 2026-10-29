@@ -41,7 +41,8 @@
 const KEY="kharasana-pilot-v1",empty=()=>({orders:[],suppliers:[],rfqs:[],expenses:[]});
 let data=load();const pages=[["dashboard","لوحة القيادة"],["orders","الصبات"],["costing","تكلفة المتر"],["suppliers","الموردون"],["purchasing","المشتريات"],["documents","رفع البروفايل"],["market","السوق"],["finance","المالية"],["settings","النسخ الاحتياطي"]];
 const $=id=>document.getElementById(id), money=n=>new Intl.NumberFormat("en-US",{maximumFractionDigits:2}).format(n||0)+" ر.س",num=v=>Number(v),safe=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),uid=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&["orders","suppliers","rfqs","expenses"].every(k=>Array.isArray(d[k])))return d}catch{}return empty()}
+function validData(d){return Boolean(d&&typeof d==="object"&&!Array.isArray(d)&&["orders","suppliers","rfqs","expenses"].every(k=>Array.isArray(d[k])&&d[k].length<=10000&&d[k].every(x=>x&&typeof x==="object"&&!Array.isArray(x)&&typeof x.id==="string"&&x.id.length<120)))}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(validData(d))return d}catch{}return empty()}
 function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
 $("tabs").innerHTML=pages.map(([id,label])=>'<button class="tab '+(id==="dashboard"?"active":"")+'" data-page="'+id+'">'+label+'</button>').join("");
 $("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-page]");if(!b)return;document.querySelectorAll("section").forEach(s=>s.classList.toggle("active",s.id===b.dataset.page));document.querySelectorAll(".tab").forEach(s=>s.classList.toggle("active",s===b))});
@@ -69,7 +70,7 @@ $("extract").onclick=()=>{let text=$("profileText").value;if(!text.trim()){alert
 function download(name,mime,content){let a=document.createElement("a"),u=URL.createObjectURL(new Blob([content],{type:mime}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)}
 $("export").onclick=()=>download("kharasana-backup.json","application/json",JSON.stringify(data,null,2));
 $("exportCsv").onclick=()=>{let lines=[["customer","area","mix","pour","qty","price","cost","status"],...data.orders.map(x=>["customer","area","mix","pour","qty","price","cost","status"].map(k=>x[k]))];download("kharasana-orders.csv","text/csv;charset=utf-8","\ufeff"+lines.map(row=>row.map(v=>'"'+String(v??"").replaceAll('"','""')+'"').join(",")).join("\r\n"))};
-$("importFile").onchange=async e=>{try{let f=e.target.files[0];if(!f||f.size>5e6)throw Error("الملف كبير أو غير موجود");let d=JSON.parse(await f.text());if(!["orders","suppliers","rfqs","expenses"].every(k=>Array.isArray(d[k])))throw Error("بنية الملف غير صحيحة");if(!confirm("استبدال جميع البيانات المحلية؟"))return;data=d;save();alert("تم الاستيراد")}catch(err){alert("تعذر الاستيراد: "+err.message)}};
+$("importFile").onchange=async e=>{try{let f=e.target.files[0];if(!f||f.size>2e6)throw Error("الملف كبير أو غير موجود");let d=JSON.parse(await f.text());if(!validData(d))throw Error("بنية الملف غير صحيحة أو بياناته غير آمنة");if(!confirm("استبدال جميع البيانات المحلية؟"))return;data=d;save();alert("تم الاستيراد")}catch(err){alert("تعذر الاستيراد: "+err.message)}};
 $("clear").onclick=()=>{if(confirm("حذف جميع البيانات المحلية نهائيًا؟")){data=empty();save()}};
 render();compute();
 </script></body></html>
