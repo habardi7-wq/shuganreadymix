@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {measuredSavings} from '../src/impact-engine.mjs';
+test('normalizes baseline to actual output',()=>{const x=measuredSavings({baselineCostHalalas:1850000,actualCostHalalas:1780000,baselineVolumeLiters:100000,actualVolumeLiters:100000,platformCostHalalas:50000});assert.equal(x.grossSavingsHalalas,70000);assert.equal(x.netSavingsHalalas,20000);assert.equal(x.roiBasisPoints,4000)});
+test('lower actual output must not inflate savings',()=>{const x=measuredSavings({baselineCostHalalas:1850000,actualCostHalalas:900000,baselineVolumeLiters:100000,actualVolumeLiters:50000});assert.equal(x.normalizedBaselineHalalas,925000);assert.equal(x.grossSavingsHalalas,25000)});
+test('negative savings are reported, not hidden',()=>{const x=measuredSavings({baselineCostHalalas:10000,actualCostHalalas:11000,baselineVolumeLiters:1000,actualVolumeLiters:1000});assert.equal(x.grossSavingsHalalas,-1000)});
+test('no platform cost means undefined ROI',()=>{const x=measuredSavings({baselineCostHalalas:10000,actualCostHalalas:9000,baselineVolumeLiters:1000,actualVolumeLiters:1000});assert.equal(x.roiBasisPoints,null)});
+test('invalid volume rejected',()=>assert.throws(()=>measuredSavings({baselineCostHalalas:1000,actualCostHalalas:100,baselineVolumeLiters:0,actualVolumeLiters:1000})));
